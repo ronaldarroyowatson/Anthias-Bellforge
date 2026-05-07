@@ -342,7 +342,7 @@ server = [
     { name = "pyyaml", specifier = "==6.0.2" },
     { name = "redis", specifier = "==7.4.0" },
     { name = "requests", specifier = "==2.33.1" },
-    { name = "sh", specifier = "==2.2.2" },
+    { name = "sh", specifier = "==1.14.3" },
     { name = "tenacity", specifier = "==9.1.2" },
     { name = "urllib3", specifier = "==2.6.3" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.32.1" },
@@ -373,7 +373,7 @@ test = [
     { name = "redis", specifier = "==7.4.0" },
     { name = "requests", specifier = "==2.33.1" },
     { name = "selenium", specifier = "==4.36.0" },
-    { name = "sh", specifier = "==2.2.2" },
+    { name = "sh", specifier = "==1.14.3" },
     { name = "splinter", specifier = "==0.21.0" },
     { name = "tenacity", specifier = "==9.1.2" },
     { name = "time-machine", specifier = "==2.15.0" },
@@ -395,7 +395,7 @@ viewer = [
     { name = "pytz", specifier = "==2025.2" },
     { name = "redis", specifier = "==7.4.0" },
     { name = "requests", specifier = "==2.33.1" },
-    { name = "sh", specifier = "==2.2.2" },
+    { name = "sh", specifier = "==1.14.3" },
     { name = "tenacity", specifier = "==9.1.2" },
     { name = "urllib3", specifier = "==2.6.3" },
 ]
@@ -1652,12 +1652,9 @@ wheels = [
 
 [[package]]
 name = "sh"
-version = "2.2.2"
+version = "1.14.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/59/52/f43920223c93e31874677c681b8603d36a40d3d8502d3a37f80d3995d43e/sh-2.2.2.tar.gz", hash = "sha256:653227a7c41a284ec5302173fbc044ee817c7bad5e6e4d8d55741b9aeb9eb65b", size = 345866, upload-time = "2025-02-24T07:16:25.363Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/98/d82f14ac7ffedbd38dfa2383f142b26d18d23ca6cf35a40f4af60df666bd/sh-2.2.2-py3-none-any.whl", hash = "sha256:e0b15b4ae8ffcd399bc8ffddcbd770a43c7a70a24b16773fbb34c001ad5d52af", size = 38295, upload-time = "2025-02-24T07:16:23.782Z" },
-]
+sdist = { url = "https://files.pythonhosted.org/packages/b7/09/89c28aaf2a49f226fef8587c90c6386bd2cc03a0295bc4ff7fc6ee43c01d/sh-1.14.3.tar.gz", hash = "sha256:e4045b6c732d9ce75d571c79f5ac2234edd9ae4f5fa959b09705082bdca18c7", size = 62851, upload-time = "2022-07-18T07:17:50.947339Z" }
 
 [[package]]
 name = "six"
