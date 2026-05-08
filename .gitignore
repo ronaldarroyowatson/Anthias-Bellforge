@@ -67,3 +67,7 @@ static/dist/
 
 # Linting
 .coffeelint.json
+
+# Local runtime/debug outputs
+.anthias/
+artifacts/
