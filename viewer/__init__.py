@@ -269,9 +269,7 @@ def _resolve_startup_connect_url() -> str:
     if node_ip_candidates:
         return _normalize_startup_host(node_ip_candidates)
 
-    if configured_host:
-        return _normalize_startup_host(configured_host)
-
+    # Try hostname fallback when no valid IP is available
     node_hostname = get_node_hostname().strip().lower()
     if node_hostname:
         return _normalize_startup_host(f'{node_hostname}.local')

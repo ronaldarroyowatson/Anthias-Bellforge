@@ -16,10 +16,10 @@ import netifaces
 import redis
 import requests
 from tenacity import (
-    before_sleep_log,
-    retry_if_exception_type,
     RetryError,
     Retrying,
+    before_sleep_log,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_fixed,
 )
