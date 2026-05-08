@@ -1,4 +1,4 @@
-#!/bin/bash -e
+﻿#!/bin/bash -e
 
 # Enable HTTPS on Anthias by adding a Caddy sidecar that terminates TLS
 # in front of anthias-server. Three modes:

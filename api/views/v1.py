@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 
 from drf_spectacular.utils import (
     OpenApiExample,

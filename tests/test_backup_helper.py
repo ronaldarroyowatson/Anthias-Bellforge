@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import tarfile
 import tempfile
@@ -154,7 +154,7 @@ class RecoverLegacyTarballTest(unittest.TestCase):
             with open(payload, 'wb') as f:
                 f.write(b'pwned')
 
-            # NOSONAR(python:S5042) — fixture builder, write mode.
+            # NOSONAR(python:S5042) â€” fixture builder, write mode.
             with tarfile.open(archive, 'w:gz') as tar:  # NOSONAR
                 tar.add(path.join(scratch, '.anthias'), arcname='.anthias')
                 tar.add(

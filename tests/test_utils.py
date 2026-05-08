@@ -1,4 +1,4 @@
-# coding=utf-8
+﻿# coding=utf-8
 
 import unittest
 from datetime import datetime
@@ -18,8 +18,8 @@ class UtilsTest(unittest.TestCase):
     def test_unicode_correctness_in_bottle_templates(self) -> None:
         self.assertEqual(template_handle_unicode('hello'), 'hello')
         self.assertEqual(
-            template_handle_unicode('Привет'),
-            'Привет',
+            template_handle_unicode('ÐŸÑ€Ð¸Ð²ÐµÑ‚'),
+            'ÐŸÑ€Ð¸Ð²ÐµÑ‚',
         )
 
     def test_json_tz(self) -> None:

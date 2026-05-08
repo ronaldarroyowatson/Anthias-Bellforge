@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Defensively expose legacy /data/.screenly and /data/screenly_assets
 # paths as symlinks if a running setup still has them in DB rows or in

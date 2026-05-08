@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 #
 # Rebuild the Qt 5 cross-compile toolchain tarballs for the surviving
 # 32-bit Pi boards (pi2, pi3) on Debian Trixie. Produces

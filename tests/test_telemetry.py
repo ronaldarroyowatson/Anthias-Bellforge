@@ -1,4 +1,4 @@
-import json
+﻿import json
 import unittest
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -125,7 +125,7 @@ class TestSendTelemetry(unittest.TestCase):
         self, _mock_post: Any
     ) -> None:
         self.assertFalse(telemetry.send_telemetry())
-        # No cooldown set — next tick retries.
+        # No cooldown set â€” next tick retries.
         self.assertNotIn(telemetry.TELEMETRY_COOLDOWN_KEY, self.redis_data)
 
     @patch.object(telemetry, 'requests_post', side_effect=Timeout)

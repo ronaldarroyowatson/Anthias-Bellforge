@@ -1,4 +1,4 @@
-class SigalrmError(Exception):
+﻿class SigalrmError(Exception):
     pass
 
 

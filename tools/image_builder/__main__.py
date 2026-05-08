@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 import click
@@ -66,12 +66,12 @@ def build_image(
     # uv-builder stage (docker/uv-builder.j2); the runtime image gets
     # the venv COPY'd in pre-built, so anything builder-only would just
     # be dead weight here. `libcec7` is the runtime SONAME the cec
-    # Python wheel (built in uv-builder) dlopens at import time —
+    # Python wheel (built in uv-builder) dlopens at import time â€”
     # debian:trixie shipped libcec 7.0 (Ubuntu still has libcec6, easy
-    # to mix up). `iproute2` is needed by bin/wait.py — debian:trixie's
+    # to mix up). `iproute2` is needed by bin/wait.py â€” debian:trixie's
     # base image ships neither iproute2 nor net-tools by default, so
     # we install it explicitly. `python3-gi` stays because pydbus does
-    # `from gi.repository import GLib, Gio` at import — viewer's
+    # `from gi.repository import GLib, Gio` at import â€” viewer's
     # `--system-site-packages` venv picks it up from the system
     # site-packages.
     base_apt_dependencies = [
@@ -95,7 +95,7 @@ def build_image(
     # The 32-bit Pi boards (pi2, pi3) link against Broadcom's legacy
     # userland (libbcm_host, libmmal, libvchiq_arm) at runtime via
     # libraspberrypi0. Pull it from archive.raspbian.org's `firmware`
-    # component — Trixie's archive.raspberrypi.org/main no longer
+    # component â€” Trixie's archive.raspberrypi.org/main no longer
     # ships it (replaced by raspi-utils, which doesn't cover the
     # Qt 5 webview link path), and on archive.raspbian.org's trixie
     # tree it's `firmware` not `rpi` that ships libraspberrypi0
@@ -149,17 +149,17 @@ def build_image(
     # Resolve cache_from / cache_to. `--clean-build` short-circuits both
     # to None for a true cold rebuild. Otherwise we pick a backend:
     #
-    #   * local    — board-scoped on-disk directory at
+    #   * local    â€” board-scoped on-disk directory at
     #     $XDG_CACHE_HOME/anthias-buildx/<board> (typically
     #     ~/.cache/anthias-buildx/<board>). Used for local dev so
     #     cache state survives across `tools.image_builder`
     #     invocations on the same machine.
-    #   * registry — BuildKit's registry cache backend
+    #   * registry â€” BuildKit's registry cache backend
     #     (https://docs.docker.com/build/cache/backends/registry/).
     #     Pushes cache to a tagged image at
     #     <namespace>-<service>:buildcache-<board>. Reuses the GHCR
-    #     login already done by CI — no extra tokens or third-party
-    #     actions needed — and inherits GHCR's free unlimited
+    #     login already done by CI â€” no extra tokens or third-party
+    #     actions needed â€” and inherits GHCR's free unlimited
     #     storage for public packages. Cache lives next to the real
     #     image tags but with a `buildcache-*` prefix so it can't
     #     collide with the immutable <short-hash>-<board> or
@@ -177,7 +177,7 @@ def build_image(
         cache_ref = (
             f'ghcr.io/screenly/anthias-{service}:buildcache-{cache_scope}'
         )
-        # Reads are always safe — anthias-* GHCR packages are public,
+        # Reads are always safe â€” anthias-* GHCR packages are public,
         # so cache_from works without auth (matters for someone
         # invoking this locally with --cache-backend=registry to
         # warm-start off CI's cache).
@@ -298,7 +298,7 @@ def build_image(
         '~/.cache/anthias-buildx/) and is right for local dev. '
         '`registry` pushes the cache to '
         'ghcr.io/screenly/anthias-<service>:buildcache-<board> for '
-        'CI — reuses the GHCR login already done by the workflow, '
+        'CI â€” reuses the GHCR login already done by the workflow, '
         'no extra tokens needed. Override via $BUILDX_CACHE_BACKEND.'
     ),
 )
@@ -334,7 +334,7 @@ def main(
         # Define tag components.
         #
         # GHCR is listed first because it is the primary, canonical source
-        # for Anthias images going forward — `bin/upgrade_containers.sh`
+        # for Anthias images going forward â€” `bin/upgrade_containers.sh`
         # regenerates compose from `docker-compose.yml.tmpl`, so flipping
         # the template (separate change) flips every device on next
         # upgrade. Docker Hub stays in the list as a parallel push during

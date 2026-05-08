@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import binascii
@@ -167,7 +167,7 @@ class BasicAuth(Auth):
                     try:
                         decoded = b64decode(auth_data).decode('utf-8')
                     except (binascii.Error, UnicodeDecodeError, ValueError):
-                        # Malformed Authorization header — treat as
+                        # Malformed Authorization header â€” treat as
                         # unauthenticated rather than letting the decode
                         # error bubble up and degrade availability.
                         return False
@@ -249,7 +249,7 @@ def authorized(
     # an `HttpResponse` subclass), mypy collapses `Response | HttpResponse`
     # to just `HttpResponse`, losing the `Response`-specific attributes
     # from the static type. This mirrors Django's own `@login_required`
-    # decorator and is intentional — at runtime the wrapped view still
+    # decorator and is intentional â€” at runtime the wrapped view still
     # returns its concrete type. Callers that need the narrower type
     # should cast at the call site.
     from django.http import HttpRequest

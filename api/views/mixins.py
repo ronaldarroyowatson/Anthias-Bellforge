@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import tarfile
 import uuid
 from base64 import b64encode
@@ -115,7 +115,7 @@ class RecoverViewMixin(APIView):
             raise ValidationError(
                 {'backup_upload': 'Incorrect file extension.'}
             )
-        # Don't trust the client-supplied filename — generate a
+        # Don't trust the client-supplied filename â€” generate a
         # server-side name to avoid path traversal via crafted names
         # (e.g. '../etc/passwd', absolute paths).
         location = path.join('static', f'{uuid.uuid4().hex}.tar.gz')

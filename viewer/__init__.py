@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # Viewer runtime: startup splash, display transport, and playback loop.
 
 import ipaddress
@@ -83,7 +83,7 @@ def send_current_asset_id_to_server(correlation_id: str | None) -> None:
     # `subscriber.start()` runs before `scheduler = Scheduler()` in
     # main(), so a `current_asset_id` command arriving during the
     # `wait_for_server` window would `AttributeError` on
-    # `scheduler.current_asset_id`. Reply with `None` instead — the v1
+    # `scheduler.current_asset_id`. Reply with `None` instead â€” the v1
     # endpoint already treats a falsy id as "no current asset" and
     # returns `[]`, which is the correct answer pre-scheduler-init.
     if scheduler is None:

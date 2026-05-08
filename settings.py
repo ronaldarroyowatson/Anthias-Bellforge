@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import configparser
@@ -124,7 +124,7 @@ class AnthiasSettings(UserDict[str, Any]):
                 self[field] = config.get(section, field)
                 if field == 'password' and self[field] != '':
                     # Both legacy SHA256 hashes and any non-Django-format
-                    # value (incl. plaintext) are unsafe to keep — they
+                    # value (incl. plaintext) are unsafe to keep â€” they
                     # cannot be verified by the new PBKDF2-based path. Clear
                     # the password and disable basic auth so the device
                     # stays reachable; the operator must re-set credentials
@@ -254,7 +254,7 @@ class ReplySender:
     before the viewer answered) don't accumulate in Redis.
 
     Takes the caller's redis connection so we don't open a fresh
-    connection (and connection pool) per reply — the viewer reuses its
+    connection (and connection pool) per reply â€” the viewer reuses its
     process-wide ``r`` here.
     """
 
@@ -287,7 +287,7 @@ class ReplyCollector:
     def recv_json(self, correlation_id: str, timeout_ms: int) -> Any:
         key = f'{REPLY_KEY_PREFIX}{correlation_id}'
 
-        # ``timeout_ms <= 0`` is a non-blocking poll — match the old ZMQ
+        # ``timeout_ms <= 0`` is a non-blocking poll â€” match the old ZMQ
         # collector's contract (zmq.poll(0) returns immediately) instead
         # of blocking BLPOP for a full second. Use LPOP and raise the
         # same timeout error if nothing's queued.

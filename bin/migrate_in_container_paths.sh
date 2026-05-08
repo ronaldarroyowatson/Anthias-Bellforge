@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 #
 # In-container companion to bin/migrate_legacy_paths.sh.
 #

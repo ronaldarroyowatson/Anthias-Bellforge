@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import subprocess
 import tempfile
@@ -148,7 +148,7 @@ class MigrateLegacyPathsTest(unittest.TestCase):
         self.assertTrue(os.path.islink(os.path.join(self.home, 'screenly')))
 
     def test_fresh_install_noop(self) -> None:
-        # No legacy paths and no new paths → script should still succeed.
+        # No legacy paths and no new paths â†’ script should still succeed.
         run_migrate(self.home)
         self.assertFalse(os.path.exists(os.path.join(self.home, 'anthias')))
         self.assertFalse(os.path.exists(os.path.join(self.home, 'screenly')))

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+﻿#!/bin/bash -e
 
 # Disable HTTPS on Anthias: stop + remove the Caddy sidecar that
 # bin/enable_ssl.sh installed, drop the compose override, and bring

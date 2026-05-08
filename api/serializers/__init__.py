@@ -1,4 +1,4 @@
-from datetime import timezone
+﻿from datetime import timezone
 from os import path
 from typing import Any
 
@@ -71,7 +71,7 @@ class UpdateAssetSerializer(Serializer[Asset]):
     # can override them with BooleanField/IntegerField. djangorestframework-
     # stubs treats Field subclasses as invariant on their type parameters,
     # so a narrower base type makes the override a [assignment] error. Do
-    # NOT widen any other field "for consistency" — only widen those that
+    # NOT widen any other field "for consistency" â€” only widen those that
     # are actually overridden in subclasses.
     name = CharField()
     start_date = DateTimeField(default_timezone=timezone.utc)

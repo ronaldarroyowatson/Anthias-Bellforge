@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import sys
 from collections.abc import Iterator
@@ -53,7 +53,7 @@ def fake_settings(raw: str) -> Iterator[tuple[Any, Any]]:
     # Force a re-import so AnthiasSettings() is instantiated against the
     # CONFIG_FILE we just wrote. Without this, a prior test that imported
     # `settings` cleanly would leave the module cached, and `import
-    # settings` here would skip __init__ entirely — silently accepting
+    # settings` here would skip __init__ entirely â€” silently accepting
     # any config (including the broken-by-design fixture).
     sys.modules.pop('settings', None)
     try:

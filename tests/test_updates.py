@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 from typing import Any
 
@@ -28,7 +28,7 @@ class UpdateTest(ParametrizedTestCase):
     @parametrize(
         'hashes, expected',
         [
-            # Master HEAD matches local hash → up to date regardless of
+            # Master HEAD matches local hash â†’ up to date regardless of
             # whether the published image was found.
             (
                 {
@@ -40,7 +40,7 @@ class UpdateTest(ParametrizedTestCase):
                 True,
             ),
             # Master is ahead of local, but the running image manifest
-            # matches `latest-<board>` on GHCR → up to date.
+            # matches `latest-<board>` on GHCR â†’ up to date.
             (
                 {
                     'latest_remote_hash': GIT_HASH_2,
@@ -51,7 +51,7 @@ class UpdateTest(ParametrizedTestCase):
                 True,
             ),
             # Master HEAD matches local even when GHCR check disagrees
-            # (e.g. tag retention dropped our short-hash) → up to date.
+            # (e.g. tag retention dropped our short-hash) â†’ up to date.
             (
                 {
                     'latest_remote_hash': GIT_HASH_1,
@@ -62,7 +62,7 @@ class UpdateTest(ParametrizedTestCase):
                 True,
             ),
             # Master is ahead AND the running image is older than
-            # `latest-<board>` on GHCR → banner shown.
+            # `latest-<board>` on GHCR â†’ banner shown.
             (
                 {
                     'latest_remote_hash': GIT_HASH_2,
@@ -72,7 +72,7 @@ class UpdateTest(ParametrizedTestCase):
                 },
                 False,
             ),
-            # Master is ahead and GHCR lookup failed (None) → fail open
+            # Master is ahead and GHCR lookup failed (None) â†’ fail open
             # to "not up to date" so the banner shows rather than the
             # device sitting silently on a stale image.
             (

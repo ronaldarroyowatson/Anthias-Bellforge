@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # Tests render probe telemetry persistence behavior.
 
 import importlib.util

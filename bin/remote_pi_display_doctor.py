@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Remote display doctor: automate Pi startup checks, tests, and debug bundle pull.
 
 from __future__ import annotations

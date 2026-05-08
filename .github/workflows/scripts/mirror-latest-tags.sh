@@ -1,12 +1,12 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 # Mirror immutable <short-hash>-<board> tags onto the floating
 # latest-<board> tag for one registry namespace. Called twice from
-# .github/workflows/docker-build.yaml — once for GHCR (hard-fail)
+# .github/workflows/docker-build.yaml â€” once for GHCR (hard-fail)
 # and once for Docker Hub (soft-fail via continue-on-error).
 #
 # Reads NAMESPACE from env (e.g. ghcr.io/screenly/anthias or
 # screenly/anthias). Image refs are built as
-# "${NAMESPACE}-${service}:${tag}" — note the trailing dash in the
+# "${NAMESPACE}-${service}:${tag}" â€” note the trailing dash in the
 # namespace's effective form, matching the existing
 # anthias-{server,redis,viewer} image naming.
 #

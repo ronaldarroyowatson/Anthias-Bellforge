@@ -1,4 +1,4 @@
-import os
+﻿import os
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
@@ -121,7 +121,7 @@ def get_viewer_context(board: str, target_platform: str) -> dict[str, Any]:
     # CalVer release of the WebView (YYYY.MM.PATCH). Bump this default
     # together with the corresponding WebView-v* tag in the release.
     # Override via WEBVIEW_VERSION env when building the viewer image
-    # ahead of (or against a fork of) the canonical release — useful
+    # ahead of (or against a fork of) the canonical release â€” useful
     # while the new WebView-v* tag is still being cut, since
     # Dockerfile.viewer.j2 will otherwise 404 when fetching the
     # not-yet-published artifact.
@@ -151,7 +151,7 @@ def get_viewer_context(board: str, target_platform: str) -> dict[str, Any]:
     # Most of the long *-dev list this file used to carry was needed
     # to *build* Qt + the WebView. Now that both ship as prebuilt
     # tarballs (downloaded in Dockerfile.viewer.j2) the runtime image
-    # only needs the .so files those binaries link against — i.e. the
+    # only needs the .so files those binaries link against â€” i.e. the
     # non -dev runtime libs. The list below is the still-being-trimmed
     # remainder; expect more to fall off as ldd-driven cleanup
     # continues.
@@ -227,7 +227,7 @@ def get_viewer_context(board: str, target_platform: str) -> dict[str, Any]:
         # pi4-64/pi5/x86 use mpv (--vo=drm) for video. VLC is
         # deliberately *not* installed: MediaPlayerProxy in
         # viewer/media_player.py routes Qt6 boards to MPVMediaPlayer,
-        # so VLC would just be ~80–100 MB of dead weight here.
+        # so VLC would just be ~80â€“100 MB of dead weight here.
         viewer_extra_apt_dependencies.extend(
             [
                 'mpv',
@@ -242,7 +242,7 @@ def get_viewer_context(board: str, target_platform: str) -> dict[str, Any]:
         # repeated here. libssl1.1 is gone in trixie; the rebuilt Qt 5
         # webview archive links against libssl3 from the base image.
         # libgst-dev / libsqlite0-dev / libsrtp0-dev were dropped in
-        # trixie — libsqlite3-dev and libsrtp2-dev are already in the
+        # trixie â€” libsqlite3-dev and libsrtp2-dev are already in the
         # main viewer apt list above; libgstreamer1.0-dev is Qt 5-only
         # and is added in the extend() below. VLC is Qt5-only because
         # MediaPlayerProxy only routes pi2/pi3 to VLCMediaPlayer.

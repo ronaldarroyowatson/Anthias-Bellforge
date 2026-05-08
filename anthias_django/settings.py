@@ -1,4 +1,4 @@
-"""
+﻿"""
 Django settings for anthias_django project.
 
 For more information on this file, see
@@ -18,7 +18,7 @@ from settings import settings as device_settings
 
 # django_stubs_ext.monkeypatch() makes Django generic classes
 # subscriptable at runtime, and the server side of this repo relies on
-# that — anthias_app/admin.py defines `class AssetAdmin(admin.ModelAdmin
+# that â€” anthias_app/admin.py defines `class AssetAdmin(admin.ModelAdmin
 # [Asset])` at import time, which raises TypeError without the patch.
 # Keep the import optional so the viewer image (and any future service
 # that doesn't ship django-stubs-ext) can still load this settings
@@ -58,7 +58,7 @@ else:
     )
 
 # Anthias is a local-network signage device with no fixed public
-# hostname — the device is reached by LAN IP, mDNS name, or the
+# hostname â€” the device is reached by LAN IP, mDNS name, or the
 # operator's chosen DNS entry. The default of '*' preserves that
 # flexibility but is permissive against DNS-rebinding attacks where a
 # malicious page rebinds an attacker-controlled hostname to the
@@ -80,7 +80,7 @@ ALLOWED_HOSTS = [
 
 # Apps every Django consumer needs: ORM access to the Asset model,
 # plus the contenttypes + auth tables those models implicitly depend
-# on. Loaded by every service that calls django.setup() — server,
+# on. Loaded by every service that calls django.setup() â€” server,
 # celery, viewer, test.
 INSTALLED_APPS = [
     'anthias_app.apps.AnthiasAppConfig',
@@ -209,7 +209,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = '/data/anthias/staticfiles'
 
 # Dev runs uvicorn (not runserver) and skips collectstatic, so files
-# only exist in STATICFILES_DIRS — let WhiteNoise fall back to the
+# only exist in STATICFILES_DIRS â€” let WhiteNoise fall back to the
 # finders and re-stat on each request so live-reloaded JS/CSS shows up.
 if DEBUG:
     WHITENOISE_USE_FINDERS = True
@@ -223,7 +223,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 26_214_400
 # sidecar that bin/enable_ssl.sh installs) only when uvicorn has been
 # told to honour proxy headers via FORWARDED_ALLOW_IPS. Without the
 # gate, any client could set X-Forwarded-Proto: https on a plain-HTTP
-# deploy and flip request.is_secure() — secure-cookied sessions would
+# deploy and flip request.is_secure() â€” secure-cookied sessions would
 # then drop on the next plain-HTTP request, and redirects would point
 # at https:// URLs that don't exist.
 if getenv('FORWARDED_ALLOW_IPS'):

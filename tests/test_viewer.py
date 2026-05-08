@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Tests viewer startup and display-pipeline behavior.
 
@@ -99,7 +99,7 @@ class TestLoadBrowser(ViewerTestCase):
         browser_proc: mock.Mock,
         chunks: list[bytes],
     ) -> None:
-        """As above, but advance through `chunks` across reads — for
+        """As above, but advance through `chunks` across reads â€” for
         the success case where the handshake appears in a later poll."""
         type(browser_proc.process).stdout = mock.PropertyMock(
             side_effect=chunks

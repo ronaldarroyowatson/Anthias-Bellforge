@@ -1,4 +1,4 @@
-import ipaddress
+﻿import ipaddress
 import mimetypes
 import os
 from functools import wraps
@@ -17,7 +17,7 @@ from django.views.decorators.http import require_GET
 # Defense-in-depth, not the real perimeter:
 #   * In the default no-SSL install, anthias-server is published as
 #     `80:8080`, so requests arrive with REMOTE_ADDR set to the docker
-#     bridge gateway (172.x) — that IP falls inside DOCKER_BRIDGE_CIDR,
+#     bridge gateway (172.x) â€” that IP falls inside DOCKER_BRIDGE_CIDR,
 #     so LAN clients are not actually excluded. Mirrors the original
 #     nginx posture; trying to plug the gap with auth would be theatre
 #     anyway since plain-HTTP credentials are sniffable on the LAN.
@@ -26,7 +26,7 @@ from django.views.decorators.http import require_GET
 #     that header (FORWARDED_ALLOW_IPS=* in the override) and the check
 #     below sees the LAN IP, so the bypass is closed for SSL deployments.
 # IPs below are the standard RFC1918 / Docker-bridge ranges, hardcoded
-# on purpose — Sonar's S1313 ("don't hardcode IPs") doesn't apply.
+# on purpose â€” Sonar's S1313 ("don't hardcode IPs") doesn't apply.
 ANTHIAS_ASSETS_ROOT = Path('/data/anthias_assets')
 STATIC_FILES_ROOT = Path('/data/anthias/staticfiles')
 

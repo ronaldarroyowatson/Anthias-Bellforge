@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests for V2 API endpoints.
 """
 
@@ -230,7 +230,7 @@ class DeviceSettingsViewV2Test(TestCase):
 
         # PBKDF2 uses a random salt, so we can't compare the stored hash
         # against a fixed expected value. Pin the algorithm via the prefix
-        # AND verify round-trip via verify_password — the prefix check
+        # AND verify round-trip via verify_password â€” the prefix check
         # guards against a regression to a weaker hasher even if
         # verify_password() were broken.
         password_calls = [

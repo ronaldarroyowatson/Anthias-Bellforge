@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 import os
 import secrets
@@ -56,7 +56,7 @@ def _get_asset_counts() -> dict[str, int]:
         )
         counts = Counter(rows)
     except Exception as exc:
-        # Telemetry must never crash the worker — DB unreachable, table
+        # Telemetry must never crash the worker â€” DB unreachable, table
         # missing pre-migrate, etc., all degrade to zeros.
         logging.debug('asset count query failed: %s', exc)
         counts = Counter()
@@ -70,7 +70,7 @@ def _get_asset_counts() -> dict[str, int]:
 def _build_payload() -> dict[str, object]:
     # GA4 conventions: lowercase snake_case event + param names, boolean
     # values for `is_*` flags. Names are device-neutral now that x86 is
-    # a first-class device_type — `device_type` is the board variant
+    # a first-class device_type â€” `device_type` is the board variant
     # (pi4-64, pi5, x86, ...) and `hardware_model` is /proc/cpuinfo's
     # free-text model.
     params: dict[str, object] = {
@@ -120,7 +120,7 @@ def send_telemetry() -> bool:
             timeout=ANALYTICS_TIMEOUT,
         )
     except exceptions.RequestException as exc:
-        # Don't set the cooldown — let the next beat tick retry.
+        # Don't set the cooldown â€” let the next beat tick retry.
         logging.debug('Telemetry POST failed: %s', exc)
         return False
 

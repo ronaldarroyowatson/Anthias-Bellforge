@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # Render probe helpers: persist display-command telemetry for debugging.
 
 import json

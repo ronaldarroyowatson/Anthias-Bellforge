@@ -1,4 +1,4 @@
-from django.urls import URLPattern, URLResolver, path
+﻿from django.urls import URLPattern, URLResolver, path
 
 from api.views.v1_1 import AssetListViewV1_1, AssetViewV1_1
 

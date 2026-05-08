@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from threading import Thread
 from time import sleep
 from typing import Any, Callable
@@ -11,7 +11,7 @@ from settings import VIEWER_CHANNEL
 class ViewerSubscriber(Thread):
     """Background thread that listens for viewer commands on Redis pub/sub.
 
-    On startup, retries the subscribe() call until it succeeds — the redis
+    On startup, retries the subscribe() call until it succeeds â€” the redis
     container can take a few seconds longer than the viewer to start
     accepting connections, especially on first boot. After that, if the
     connection drops mid-stream, re-subscribe with backoff instead of
@@ -50,7 +50,7 @@ class ViewerSubscriber(Thread):
                 )
                 pubsub.subscribe(VIEWER_CHANNEL)
 
-                # Subscribe succeeded — clear the readiness flag from any
+                # Subscribe succeeded â€” clear the readiness flag from any
                 # prior crash, then signal we're live so publishers can
                 # send. Reset the backoff so the next disconnect starts
                 # at INITIAL_RETRY_DELAY_S again.
@@ -76,7 +76,7 @@ class ViewerSubscriber(Thread):
                 sleep(delay)
                 delay = min(delay * 2, self.MAX_RETRY_DELAY_S)
             finally:
-                # Release the underlying socket on every iteration —
+                # Release the underlying socket on every iteration â€”
                 # otherwise repeated reconnects (e.g. a flapping redis
                 # container) accumulate dead PubSub objects, each
                 # holding a connection from the pool until GC.

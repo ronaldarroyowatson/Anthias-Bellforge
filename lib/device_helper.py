@@ -1,4 +1,4 @@
-def parse_cpu_info() -> dict[str, int | str]:
+﻿def parse_cpu_info() -> dict[str, int | str]:
     """
     Extracts the various Raspberry Pi related data
     from the CPU.

@@ -1,4 +1,4 @@
-import threading
+﻿import threading
 from typing import Any
 
 # Global event for instant asset switching

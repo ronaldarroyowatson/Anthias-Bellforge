@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 TMPFILE=/tmp/cec.log
 

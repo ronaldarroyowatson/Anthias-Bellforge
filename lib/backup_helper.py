@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 import sys
 import tarfile
@@ -26,7 +26,7 @@ def _safe_tar_member(member: tarfile.TarInfo, dest_root: str) -> bool:
       - members not under one of our expected top-level directories
 
     Returning False from here causes the extractor to skip the member
-    rather than raise — partial recovery is preferable to bailing out
+    rather than raise â€” partial recovery is preferable to bailing out
     on the first weird entry, but the calling code logs a warning so
     silent skips are visible.
     """

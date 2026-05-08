@@ -1,4 +1,4 @@
-from settings import LISTEN, PORT
+﻿from settings import LISTEN, PORT
 
 SPLASH_DELAY = 60  # secs
 EMPTY_PL_DELAY = 5  # secs

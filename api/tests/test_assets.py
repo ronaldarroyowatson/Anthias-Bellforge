@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests for asset-related API endpoints.
 """
 

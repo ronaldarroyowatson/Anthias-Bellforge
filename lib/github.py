@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 
 from requests import exceptions
@@ -176,7 +176,7 @@ def _get_ghcr_manifest_digest(tag: str, token: str) -> str | None:
     # HEAD: GHCR returns Docker-Content-Digest in the response headers, so
     # there's no reason to download the manifest body for the match check.
     #
-    # 404 is a clean "tag missing" miss — for the per-commit tag this just
+    # 404 is a clean "tag missing" miss â€” for the per-commit tag this just
     # means the build hasn't been published yet (or registry retention
     # dropped it), so we don't trigger the backoff. Any other failure
     # (network error, 5xx, 429) is transient and *does* trigger the
@@ -200,7 +200,7 @@ def _get_ghcr_manifest_digest(tag: str, token: str) -> str | None:
         _set_ghcr_error_backoff()
         return None
     # GHCR normally returns Docker-Content-Digest on 200. A missing or
-    # empty header is unexpected (header-name change, edge proxy, etc.) —
+    # empty header is unexpected (header-name change, edge proxy, etc.) â€”
     # treat it like the other non-404 failures so callers back off
     # instead of caching it as a clean miss.
     digest = resp.headers.get('Docker-Content-Digest')
@@ -242,7 +242,7 @@ def is_running_latest_published_image(
             return True
         if cached == '0':
             return False
-        # '?' (or anything else) is the cached "unknown" sentinel —
+        # '?' (or anything else) is the cached "unknown" sentinel â€”
         # the per-commit tag was 404 last time we asked. Fall through
         # to None without re-fetching until the short TTL expires.
         return None
@@ -251,7 +251,7 @@ def is_running_latest_published_image(
     # most UI/API requests) doesn't hammer ghcr.io with token + manifest
     # fetches on every page load while the registry is unreachable. The
     # helpers below set this themselves on non-404 failures, so all three
-    # call sites share the same throttling — including the per-commit
+    # call sites share the same throttling â€” including the per-commit
     # HEAD, which previously fell through without any backoff and could
     # be retried every request on a 5xx/429.
     if r.get('ghcr-api-error') is not None:
@@ -273,7 +273,7 @@ def is_running_latest_published_image(
     # helper distinguishes 404 from real failures and only the latter
     # triggers the backoff. Cache the "unknown" verdict with a short
     # TTL so the next is_up_to_date() call doesn't redo token + 2xHEAD
-    # for a tag we just confirmed is missing — without overshooting so
+    # for a tag we just confirmed is missing â€” without overshooting so
     # far that a fresh publish takes 10 min to surface.
     if not current_digest:
         r.set(cache_key, '?')
