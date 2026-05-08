@@ -185,6 +185,29 @@ def get_node_ip() -> str:
     return 'Unable to retrieve IP.'
 
 
+def get_node_hostname() -> str:
+    """
+    Returns the host hostname used for local-network guidance.
+    Falls back to the Anthias default when unavailable.
+    """
+    hostname_fallback = 'anthias'
+
+    if is_balena_app():
+        response = get_balena_device_info()
+        if response.ok:
+            device_name = response.json().get('device_name')
+            if isinstance(device_name, str) and device_name.strip():
+                return device_name.strip().lower()
+        return hostname_fallback
+
+    r = connect_to_redis()
+    host_hostname = r.get('host_hostname')
+    if isinstance(host_hostname, str) and host_hostname.strip():
+        return host_hostname.strip().lower()
+
+    return hostname_fallback
+
+
 def get_node_mac_address() -> str:
     """
     Returns the MAC address.

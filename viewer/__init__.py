@@ -41,6 +41,7 @@ django.setup()
 from lib.utils import (  # noqa: E402
     connect_to_redis,
     get_balena_device_info,
+    get_node_hostname,
     get_node_ip,
     is_balena_app,
     string_to_bool,
@@ -270,6 +271,10 @@ def _resolve_startup_connect_url() -> str:
 
     if configured_host:
         return _normalize_startup_host(configured_host)
+
+    node_hostname = get_node_hostname().strip().lower()
+    if node_hostname:
+        return _normalize_startup_host(f'{node_hostname}.local')
 
     return _normalize_startup_host('anthias.local')
 

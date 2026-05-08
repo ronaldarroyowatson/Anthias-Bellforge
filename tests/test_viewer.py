@@ -304,6 +304,51 @@ class TestDisplayPipelineRouting(ViewerTestCase):
         rendered_html = unquote(offline_url[len('data:text/html,') :])
         self.assertIn('http://10.0.0.20', rendered_html)
 
+    def test_offline_splash_uses_host_local_domain_when_ip_unavailable(
+        self,
+    ) -> None:
+        with (
+            mock.patch.object(self.u, 'getenv', return_value='localhost'),
+            mock.patch.object(
+                self.u,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                self.u,
+                'get_node_hostname',
+                return_value='RPi5Dev',
+                create=True,
+            ),
+        ):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://rpi5dev.local', rendered_html)
+        self.assertNotIn('http://anthias.local', rendered_html)
+
+    def test_offline_splash_uses_anthias_local_when_hostname_unavailable(
+        self,
+    ) -> None:
+        with (
+            mock.patch.object(self.u, 'getenv', return_value='localhost'),
+            mock.patch.object(
+                self.u,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                self.u,
+                'get_node_hostname',
+                return_value='',
+                create=True,
+            ),
+        ):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://anthias.local', rendered_html)
+
 
 class TestViewerNavigationIdempotency(ViewerTestCase):
     def test_view_webpage_does_not_reload_same_url_value(self) -> None:

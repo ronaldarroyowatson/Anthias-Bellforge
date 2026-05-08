@@ -8,6 +8,7 @@ import ipaddress
 import json
 import logging
 import os
+import socket
 import subprocess
 from typing import Any, Callable
 
@@ -84,6 +85,7 @@ def set_ip_addresses() -> None:
 
     ip_addresses = get_ip_addresses()
     rdb.set('ip_addresses', json.dumps(ip_addresses))
+    rdb.set('host_hostname', socket.gethostname().strip().lower())
 
 
 # Explicit command whitelist for security reasons.

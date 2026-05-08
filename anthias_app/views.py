@@ -9,6 +9,7 @@ from django.views.decorators.http import require_http_methods
 from lib.auth import authorized
 from lib.utils import (
     connect_to_redis,
+    get_node_hostname,
     get_node_ip,
 )
 from settings import settings
@@ -72,7 +73,8 @@ def splash_page(request: HttpRequest) -> HttpResponse:
             ip_addresses.append(f'http://{ip_address}')
 
     if not ip_addresses:
-        ip_addresses.append('http://anthias.local')
+        hostname = get_node_hostname().strip().lower() or 'anthias'
+        ip_addresses.append(f'http://{hostname}.local')
 
     return template(
         request,

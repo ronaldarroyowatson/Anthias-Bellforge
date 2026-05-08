@@ -166,12 +166,40 @@ class SplashPageViewTest(TestCase):
     def test_splash_page_uses_anthias_local_when_no_ip_found(self) -> None:
         request = self.factory.get('/splash-page')
 
-        with mock.patch.object(
-            views,
-            'get_node_ip',
-            return_value='Unable to retrieve IP.',
+        with (
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                views,
+                'get_node_hostname',
+                return_value='',
+            ),
         ):
             response = views.splash_page(request)
 
         self.assertContains(response, 'http://anthias.local')
         self.assertNotContains(response, 'http://localhost')
+
+    def test_splash_page_uses_host_local_domain_when_no_ip_found(self) -> None:
+        request = self.factory.get('/splash-page')
+
+        with (
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                views,
+                'get_node_hostname',
+                return_value='RPi5Dev',
+                create=True,
+            ),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://rpi5dev.local')
+        self.assertNotContains(response, 'http://anthias.local')

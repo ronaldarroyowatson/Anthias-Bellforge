@@ -253,3 +253,24 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - bin/collect_display_debug_bundle.sh
   - bin/remote_pi_display_doctor.py
 - Status: fixed in code, pending next bundle run confirmation.
+
+### ISSUE-022: Startup guidance could advertise anthias.local when host mDNS name differed
+- Symptoms: display guidance could show `http://anthias.local` even when device hostname/mDNS was not `anthias`, causing operators to follow a non-resolving address.
+- Impact: management UI could appear unreachable during startup/offline fallback even when the device was reachable at `<actual-hostname>.local` or LAN IP.
+- Debug evidence:
+  - server `splash_page` fallback used hardcoded `http://anthias.local` when no routable IP candidates were returned.
+  - viewer offline splash resolver also defaulted to `anthias.local` when IP lookup was unavailable.
+  - Pi diagnostics captured host `HOSTNAME=RPi5Dev` while rendered startup guidance still showed `anthias.local`.
+- Fix:
+  - publish host hostname from host-agent into Redis (`host_hostname`) during IP refresh.
+  - add shared hostname lookup in `lib.utils.get_node_hostname()`.
+  - update server splash and viewer offline fallback to prefer `http://<hostname>.local`, with `anthias.local` as last-resort fallback.
+  - add regression tests for hostname-local fallback and explicit `anthias.local` fallback when hostname data is unavailable.
+- Files:
+  - host_agent.py
+  - lib/utils.py
+  - anthias_app/views.py
+  - anthias_app/tests.py
+  - viewer/__init__.py
+  - tests/test_viewer.py
+- Status: fixed in code; test execution blocked in this session due missing Docker Linux engine and missing local Django dependency.
