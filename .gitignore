@@ -69,5 +69,4 @@ static/dist/
 .coffeelint.json
 
 # Local runtime/debug outputs
-.anthias/
 artifacts/
