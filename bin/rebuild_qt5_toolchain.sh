@@ -16,7 +16,7 @@
 # Runtime: ~2-4 hours per board on a beefy x86 host (Qt 5 + QtWebEngine
 # under qemu-arm). The build is RAM-hungry: build_qt5.sh runs make with
 # nproc+2 jobs and Qt 5 + WebEngine peaks at roughly 2 GB per job, so an
-# 8-core box wants ≥ 16 GB free. Boards are built sequentially because
+# 8-core box wants ??? 16 GB free. Boards are built sequentially because
 # (a) two parallel builds will OOM most hosts and (b) the Linaro
 # cross-compile toolchain extracted under .qt5-toolchain-build/src is
 # shared and isn't safe to extract concurrently.

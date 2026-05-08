@@ -62,8 +62,8 @@ if [[ -n $(docker ps | grep srly-ose) ]]; then
 fi
 
 # Drop legacy containers no longer in the compose file:
-#   * nginx / websocket — folded into anthias-server (uvicorn).
-#   * wifi-connect      — service removed; nmcli/nmtui is the supported
+#   * nginx / websocket ??? folded into anthias-server (uvicorn).
+#   * wifi-connect      ??? service removed; nmcli/nmtui is the supported
 #                          path now.
 #   * anthias-celery / srly-ose-celery containers from the era when
 #     celery had its own image. The new compose file recreates the

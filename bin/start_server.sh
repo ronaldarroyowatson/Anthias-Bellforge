@@ -34,7 +34,7 @@ UVICORN_BIND_HOST="${LISTEN:-0.0.0.0}"
 UVICORN_BIND_PORT="${PORT:-8080}"
 
 # Trust X-Forwarded-* only from explicitly listed proxies. We deliberately
-# do NOT default this to '*' — the IP allowlists in views_files.py rely on
+# do NOT default this to '*' ??? the IP allowlists in views_files.py rely on
 # the TCP peer address, and a wildcard would let any client spoof
 # REMOTE_ADDR via X-Forwarded-For. Operators who terminate TLS at a
 # reverse proxy (e.g. the Caddy sidecar bin/enable_ssl.sh installs) get

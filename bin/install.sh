@@ -18,7 +18,7 @@ UV_PIN_VERSION="0.9.17"
 
 INTRO_MESSAGE=(
     "Anthias runs on a dedicated Raspberry Pi (2/3/4-64-bit/5) or x86 device."
-    "The host will be repurposed for digital signage — on a Pi you lose the"
+    "The host will be repurposed for digital signage ??? on a Pi you lose the"
     "regular desktop environment, and on x86 the machine should not be used"
     "for anything else."
     ""
@@ -179,7 +179,7 @@ function clone_repo() {
     git -C "${ANTHIAS_REPO_DIR}" checkout "${BRANCH}"
 
     # Releases are pinned via tags (e.g. v0.20.5), which fetch into
-    # refs/tags/ — `origin/v0.20.5` is not a valid ref. Resolve tags
+    # refs/tags/ ??? `origin/v0.20.5` is not a valid ref. Resolve tags
     # explicitly via refs/tags/${BRANCH} and fall through to
     # origin/${BRANCH} only for actual branches.
     local RESET_REF
@@ -199,7 +199,7 @@ function clone_repo() {
 function install_ansible() {
     display_section "Install uv and host Python dependencies"
 
-    # uv manages its own Python and packages — no system pip/venv needed.
+    # uv manages its own Python and packages ??? no system pip/venv needed.
     # Pinned via UV_PIN_VERSION so the host and the docker uv-builder
     # stage stay in lockstep (see docker/uv-builder.j2).
     if ! command -v uv &> /dev/null || \
@@ -217,7 +217,7 @@ function install_ansible() {
     fi
 
     # Resolve and install the `host` dependency group from pyproject.toml.
-    # `--python ">=3.13"` matches pyproject.toml's requires-python pin —
+    # `--python ">=3.13"` matches pyproject.toml's requires-python pin ???
     # Trixie ships 3.13 by default, so the installer just picks up the
     # system interpreter on supported hosts. Older Debian releases
     # (Bookworm = 3.11) are no longer supported on the host.
@@ -271,7 +271,7 @@ function run_ansible_playbook() {
         ANSIBLE_PLAYBOOK_ARGS+=("--skip-tags" "raspberry-pi")
     fi
 
-    # Point Ansible at the venv's Python — we no longer install
+    # Point Ansible at the venv's Python ??? we no longer install
     # python3 system-wide in the bootstrap step.
     export ANSIBLE_PYTHON_INTERPRETER="/home/${USER}/installer_venv/bin/python"
 

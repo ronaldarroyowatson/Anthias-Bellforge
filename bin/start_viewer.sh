@@ -134,7 +134,7 @@ fi
 # which makes pages look ~half-size on a 4K TV (forum 6538). Pick a Qt
 # scale factor based on the active framebuffer width so the page is laid
 # out as if the screen were 1920px wide and then upscaled. Pi/x86 viewer
-# images both expose connector state under /sys/class/drm — the first
+# images both expose connector state under /sys/class/drm ??? the first
 # line of `modes` is the active/preferred mode. Skip if the user already
 # set QT_SCALE_FACTOR explicitly, so a manual override always wins.
 if [ -z "${QT_SCALE_FACTOR:-}" ]; then
@@ -173,7 +173,7 @@ fi
 chmod -R a+rX /usr/src/app 2>/dev/null || true
 
 # sudo resets PATH to its secure_path, so resolve python via the
-# absolute venv path instead — `python` on PATH would otherwise hit
+# absolute venv path instead ??? `python` on PATH would otherwise hit
 # the system interpreter, which has no Anthias deps installed.
 # --preserve-env=XDG_RUNTIME_DIR forces sudo to forward the runtime dir
 # we just set; -E alone is subject to env_check / env_delete and is not
