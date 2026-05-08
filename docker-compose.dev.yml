@@ -51,7 +51,7 @@ services:
       - ./:/usr/src/app/
 
   redis:
-    image: mirror.gcr.io/library/redis:alpine
+    image: redis:alpine
 
 volumes:
     anthias-data:
