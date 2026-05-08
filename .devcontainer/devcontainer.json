@@ -1,0 +1,81 @@
+{
+  "name": "Anthias-Bellforge Dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+
+  // Install additional tools inside the container
+  "features": {
+    // Docker-in-Docker so compose stacks can be spun up from inside the devcontainer
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "dockerDashComposeVersion": "v2"
+    },
+    // Node.js — needed for bun and MCP server npx calls
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    // Bun (JS runtime + package manager)
+    "ghcr.io/shyim/devcontainers-features/bun:0": {},
+    // uv (Python package/venv manager)
+    "ghcr.io/astral-sh/uv:1": {
+      "version": "0.9.17"
+    },
+    // Git extras
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "postCreateCommand": "uv venv && uv pip install --group dev-host && bun install",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker",
+        "redhat.ansible",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml",
+        "wholroyd.jinja",
+        "batisteo.vscode-django",
+        "humao.rest-client",
+        "42crunch.vscode-openapi",
+        "cweijan.vscode-redis-client",
+        "github.copilot",
+        "github.copilot-chat",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.languageServer": "Pylance"
+      }
+    }
+  },
+
+  "forwardPorts": [
+    8000,   // anthias-server (dev)
+    6379,   // redis
+    5555    // celery flower (optional)
+  ],
+
+  "portsAttributes": {
+    "8000": { "label": "Anthias Server", "onAutoForward": "notify" },
+    "6379": { "label": "Redis", "onAutoForward": "silent" },
+    "5555": { "label": "Celery Flower", "onAutoForward": "silent" }
+  },
+
+  "mounts": [
+    // Persist uv package cache across rebuilds
+    "source=anthias-uv-cache,target=/root/.cache/uv,type=volume",
+    // Persist bun cache
+    "source=anthias-bun-cache,target=/root/.bun,type=volume"
+  ],
+
+  "remoteEnv": {
+    "ENVIRONMENT": "development",
+    "CELERY_BROKER_URL": "redis://localhost:6379/0",
+    "CELERY_RESULT_BACKEND": "redis://localhost:6379/0"
+  }
+}

@@ -58,12 +58,18 @@ def splash_page(request: HttpRequest) -> HttpResponse:
     ip_addresses = []
 
     for ip_address in get_node_ip().split():
-        ip_address_object = ipaddress.ip_address(ip_address)
+        try:
+            ip_address_object = ipaddress.ip_address(ip_address)
+        except ValueError:
+            continue
 
         if isinstance(ip_address_object, ipaddress.IPv6Address):
             ip_addresses.append(f'http://[{ip_address}]')
         else:
             ip_addresses.append(f'http://{ip_address}')
+
+    if not ip_addresses:
+        ip_addresses.append('http://localhost')
 
     return template(
         request,

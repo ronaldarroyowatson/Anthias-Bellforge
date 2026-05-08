@@ -56,6 +56,80 @@ if [ -w /sys/fs/cgroup/memory/memory.swappiness ]; then
     echo 0 > /sys/fs/cgroup/memory/memory.swappiness
 fi
 
+# Race guard for cold boots/hotplug: wait briefly for DRM to expose
+# connectors and report at least one HDMI output as connected.
+HDMI_DETECT_TIMEOUT_SECONDS="${HDMI_DETECT_TIMEOUT_SECONDS:-30}"
+connected_hdmi_connectors() {
+    for connector in /sys/class/drm/card*-HDMI-A-*; do
+        [ -d "$connector" ] || continue
+        [ "$(cat "$connector/status" 2>/dev/null)" = 'connected' ] || continue
+        basename "$connector"
+    done
+}
+
+dump_drm_connectors() {
+    for connector in /sys/class/drm/card*-*; do
+        [ -d "$connector" ] || continue
+        state=$(cat "$connector/status" 2>/dev/null || true)
+        echo "start_viewer: drm $(basename "$connector") status=${state:-unknown}"
+    done
+}
+
+waited=0
+while [ "$waited" -lt "$HDMI_DETECT_TIMEOUT_SECONDS" ]; do
+    CONNECTED_HDMI=$(connected_hdmi_connectors)
+    [ -n "$CONNECTED_HDMI" ] && break
+    sleep 1
+    waited=$((waited + 1))
+done
+
+if [ -n "$CONNECTED_HDMI" ]; then
+    echo "start_viewer: connected HDMI connector(s):"
+    echo "$CONNECTED_HDMI" | sed 's/^/  - /'
+else
+    echo "start_viewer: no HDMI connector reported connected after ${HDMI_DETECT_TIMEOUT_SECONDS}s"
+    dump_drm_connectors
+fi
+
+if [ "${VIEWER_DISPLAY_DEBUG:-0}" = "1" ]; then
+    echo "start_viewer: VIEWER_DISPLAY_DEBUG=1"
+    echo "start_viewer: kernel $(uname -a)"
+    echo "start_viewer: /dev/dri devices: $(ls /dev/dri 2>/dev/null | tr '\n' ' ')"
+    if [ -r /boot/firmware/config.txt ]; then
+        overlay=$(grep -E '^dtoverlay=' /boot/firmware/config.txt | tail -n1)
+        [ -n "$overlay" ] && echo "start_viewer: $overlay"
+    fi
+
+    # Keep default log volume reasonable unless explicitly overridden.
+    export QT_QPA_DEBUG="${QT_QPA_DEBUG:-1}"
+    export QT_LOGGING_RULES="${QT_LOGGING_RULES:-qt.qpa.*=true}"
+fi
+
+# If the user didn't pin a KMS connector index, infer one from the first
+# connected HDMI port so either physical port can work without manual edits.
+if [ -z "${QT_QPA_EGLFS_KMS_CONNECTOR_INDEX:-}" ] && [ -n "$CONNECTED_HDMI" ]; then
+    SELECTED_CONNECTOR=$(echo "$CONNECTED_HDMI" | head -n1)
+    PORT_NUMBER=$(echo "$SELECTED_CONNECTOR" | awk -F'HDMI-A-' '{print $2}')
+    CARD_NAME=$(echo "$SELECTED_CONNECTOR" | awk -F'-' '{print $1}')
+    case "$PORT_NUMBER" in
+        ''|*[!0-9]*)
+            ;;
+        *)
+            if [ "$PORT_NUMBER" -gt 0 ]; then
+                QT_QPA_EGLFS_KMS_CONNECTOR_INDEX=$((PORT_NUMBER - 1))
+                export QT_QPA_EGLFS_KMS_CONNECTOR_INDEX
+                # Also pin the DRM device so Qt EGLFS opens the display
+                # controller (card1 on Pi 5) rather than defaulting to card0
+                # (the V3D GPU, which has no display connectors).
+                if [ -n "$CARD_NAME" ] && [ -c "/dev/dri/$CARD_NAME" ]; then
+                    export QT_QPA_EGLFS_KMS_DEVICE="/dev/dri/$CARD_NAME"
+                fi
+                echo "start_viewer: using $SELECTED_CONNECTOR (QT_QPA_EGLFS_KMS_CONNECTOR_INDEX=${QT_QPA_EGLFS_KMS_CONNECTOR_INDEX}, QT_QPA_EGLFS_KMS_DEVICE=${QT_QPA_EGLFS_KMS_DEVICE:-default})"
+            fi
+            ;;
+    esac
+fi
+
 # QtWebEngine renders web content at 1 CSS px = 1 physical px by default,
 # which makes pages look ~half-size on a 4K TV (forum 6538). Pick a Qt
 # scale factor based on the active framebuffer width so the page is laid
@@ -94,14 +168,34 @@ if [ -z "${QT_SCALE_FACTOR:-}" ]; then
 fi
 
 # Start viewer.
+# Some copied source dirs can end up mode 700 in certain host setups,
+# which blocks the unprivileged viewer user from importing modules.
+chmod -R a+rX /usr/src/app 2>/dev/null || true
+
 # sudo resets PATH to its secure_path, so resolve python via the
 # absolute venv path instead — `python` on PATH would otherwise hit
 # the system interpreter, which has no Anthias deps installed.
 # --preserve-env=XDG_RUNTIME_DIR forces sudo to forward the runtime dir
 # we just set; -E alone is subject to env_check / env_delete and is not
 # guaranteed for XDG_* on Debian's default sudoers.
-sudo --preserve-env=XDG_RUNTIME_DIR,QT_SCALE_FACTOR -E -u viewer \
-    dbus-run-session /venv/bin/python -m viewer &
+PRESERVE_ENV_KEYS="XDG_RUNTIME_DIR,QT_SCALE_FACTOR,QT_QPA_EGLFS_KMS_CONNECTOR_INDEX,QT_QPA_EGLFS_KMS_DEVICE,QT_QPA_DEBUG,QT_LOGGING_RULES,QTWEBENGINE_CHROMIUM_FLAGS,VIEWER_DISPLAY_DEBUG"
+if [ "${VIEWER_RUN_AS_ROOT:-0}" = "1" ]; then
+    # QtWebEngine refuses to start as root unless Chromium sandboxing is disabled.
+    case " ${QTWEBENGINE_CHROMIUM_FLAGS:-} " in
+        *" --no-sandbox "*)
+            ;;
+        *)
+            export QTWEBENGINE_CHROMIUM_FLAGS="${QTWEBENGINE_CHROMIUM_FLAGS:-} --no-sandbox"
+            ;;
+    esac
+
+    echo "start_viewer: launching viewer runtime as root (VIEWER_RUN_AS_ROOT=1)"
+    echo "start_viewer: QTWEBENGINE_CHROMIUM_FLAGS=${QTWEBENGINE_CHROMIUM_FLAGS}"
+    dbus-run-session env PYTHONPATH=/usr/src/app /venv/bin/python -m viewer.__main__ &
+else
+    sudo --preserve-env="$PRESERVE_ENV_KEYS" -E -u viewer \
+        dbus-run-session env PYTHONPATH=/usr/src/app /venv/bin/python -m viewer.__main__ &
+fi
 
 # Wait for the viewer
 while true; do

@@ -1,0 +1,55 @@
+# vim: ft=yaml.docker-compose
+# Viewer overlay for the dev stack.
+# Usage: docker compose -f docker-compose.dev.yml -f docker-compose.viewer.yml up -d
+#
+# Adds the anthias-viewer service (built from local source) to the dev environment
+# so the monitor connected to the Pi shows Anthias output.
+
+services:
+  anthias-server:
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/splash-page', timeout=3)"
+          >/dev/null 2>&1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 25s
+
+  # Fixes /data/.anthias permissions before viewer starts, so the viewer user
+  # can write anthias.conf without a PermissionError on first boot.
+  anthias-permissions-init:
+    image: busybox
+    command: sh -c 'mkdir -p /data/.anthias && chmod -R a+rwX /data/.anthias'
+    volumes:
+      - anthias-data:/data
+    restart: "no"
+
+  anthias-viewer:
+    image: anthias-viewer:dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.viewer
+    depends_on:
+      anthias-server:
+        condition: service_healthy
+      anthias-permissions-init:
+        condition: service_completed_successfully
+    environment:
+      - HOME=/data
+      - PORT=8080
+      - LISTEN=anthias-server
+      - QT_QPA_PLATFORM=eglfs
+      - QT_QPA_EGLFS_KMS_ATOMIC=0
+      - VIEWER_DISPLAY_DEBUG=1
+      - QTWEBENGINE_CHROMIUM_FLAGS=--enable-logging=stderr --v=1
+      - SHOW_STARTUP_STANDBY=0
+      - VIEWER_RUN_AS_ROOT=1
+    privileged: true
+    restart: always
+    volumes:
+      - anthias-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro

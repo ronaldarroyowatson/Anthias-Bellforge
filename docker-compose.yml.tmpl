@@ -16,6 +16,7 @@ services:
       - LISTEN=0.0.0.0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - TELEMETRY_ENABLED=false
     depends_on:
       - redis
     devices:
@@ -74,6 +75,7 @@ services:
       - HOME=/data
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - TELEMETRY_ENABLED=false
     devices:
       - "/dev/vchiq:/dev/vchiq"
     restart: always

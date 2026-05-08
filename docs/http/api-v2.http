@@ -1,0 +1,91 @@
+### Anthias REST API — v2 Examples
+### Use with the VS Code REST Client extension (humao.rest-client)
+### Start dev server first: docker compose -f docker-compose.dev.yml up -d
+
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+# ─── Authentication ────────────────────────────────────────────────────────────
+# If auth is enabled, add: Authorization: Token <your-token>
+# Generate with: docker compose -f docker-compose.dev.yml exec anthias-server
+#   python manage.py drf_create_token <username>
+
+# ─── Assets ───────────────────────────────────────────────────────────────────
+
+### List all assets
+GET {{baseUrl}}/api/v2/assets/
+Content-Type: {{contentType}}
+
+###
+
+### Get a specific asset
+# Replace <asset-id> with a real UUID
+GET {{baseUrl}}/api/v2/assets/<asset-id>/
+Content-Type: {{contentType}}
+
+###
+
+### Create an asset (URL-based)
+POST {{baseUrl}}/api/v2/assets/
+Content-Type: {{contentType}}
+
+{
+  "name": "Test Web Page",
+  "uri": "https://example.com",
+  "mimetype": "webpage",
+  "is_active": true,
+  "is_enabled": true,
+  "duration": 30,
+  "play_order": 0
+}
+
+###
+
+### Update an asset
+PATCH {{baseUrl}}/api/v2/assets/<asset-id>/
+Content-Type: {{contentType}}
+
+{
+  "is_active": false
+}
+
+###
+
+### Delete an asset
+DELETE {{baseUrl}}/api/v2/assets/<asset-id>/
+
+###
+
+# ─── Playlists / Scheduling ───────────────────────────────────────────────────
+
+### Get current playlist
+GET {{baseUrl}}/api/v2/assets/?is_active=true
+Content-Type: {{contentType}}
+
+###
+
+# ─── System Info ──────────────────────────────────────────────────────────────
+
+### Get system info
+GET {{baseUrl}}/api/v2/info/
+Content-Type: {{contentType}}
+
+###
+
+### Get device settings
+GET {{baseUrl}}/api/v2/settings/
+Content-Type: {{contentType}}
+
+###
+
+# ─── OpenAPI Schema ────────────────────────────────────────────────────────────
+
+### Download OpenAPI schema
+GET {{baseUrl}}/api/schema/
+Accept: application/yaml
+
+###
+
+### Browse API docs (Swagger UI)
+# Open in browser:
+# GET {{baseUrl}}/api/schema/swagger-ui/

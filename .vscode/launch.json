@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // ── Django Dev Server ──────────────────────────────────────────────────
+    {
+      "name": "Django: runserver",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["runserver", "0.0.0.0:8000"],
+      "django": true,
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "anthias_django.settings",
+        "ENVIRONMENT": "development",
+        "HOME": "${env:USERPROFILE}",
+        "CELERY_BROKER_URL": "redis://localhost:6379/0",
+        "CELERY_RESULT_BACKEND": "redis://localhost:6379/0"
+      },
+      "justMyCode": true
+    },
+
+    // ── Celery Worker ─────────────────────────────────────────────────────
+    {
+      "name": "Celery: worker",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery",
+      "args": [
+        "-A", "celery_tasks.celery",
+        "worker",
+        "-B",
+        "-n", "worker@anthias",
+        "--loglevel=debug",
+        "--schedule", "/tmp/celerybeat-schedule"
+      ],
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "anthias_django.settings",
+        "ENVIRONMENT": "development",
+        "HOME": "${env:USERPROFILE}",
+        "CELERY_BROKER_URL": "redis://localhost:6379/0",
+        "CELERY_RESULT_BACKEND": "redis://localhost:6379/0"
+      },
+      "justMyCode": true
+    },
+
+    // ── Django Tests (no-docker) ──────────────────────────────────────────
+    {
+      "name": "Django: test (no-integration)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["test", "--exclude-tag=integration", "-v", "2"],
+      "django": true,
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "anthias_django.settings",
+        "ENVIRONMENT": "test"
+      },
+      "justMyCode": false
+    },
+
+    // ── Viewer Service ────────────────────────────────────────────────────
+    {
+      "name": "Viewer: __main__",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "viewer",
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "anthias_django.settings",
+        "ENVIRONMENT": "development",
+        "HOME": "${env:USERPROFILE}"
+      },
+      "justMyCode": true
+    }
+  ]
+}

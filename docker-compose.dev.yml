@@ -14,9 +14,11 @@ services:
     environment:
       - HOME=/data
       - LISTEN=0.0.0.0
+      - MY_IP=${MY_IP:-}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ENVIRONMENT=development
+      - TELEMETRY_ENABLED=false
     depends_on:
       - redis
     restart: always
@@ -42,13 +44,13 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ENVIRONMENT=development
+      - TELEMETRY_ENABLED=false
     restart: always
     volumes:
       - anthias-data:/data
       - ./:/usr/src/app/
 
   redis:
-    platform: "linux/amd64"
     image: mirror.gcr.io/library/redis:alpine
 
 volumes:

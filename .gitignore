@@ -59,5 +59,11 @@ staticfiles/
 # ESLint
 .eslintcache
 
+# Frontend build artifacts
+static/dist/
+
+# uv virtual environment (default name used by uv venv)
+.venv/
+
 # Linting
 .coffeelint.json

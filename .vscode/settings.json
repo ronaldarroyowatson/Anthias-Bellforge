@@ -1,0 +1,110 @@
+{
+  // ── Python ──────────────────────────────────────────────────────────────────
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "mypy-type-checker.args": [
+    "--config-file=${workspaceFolder}/pyproject.toml"
+  ],
+  "ruff.configuration": "${workspaceFolder}/ruff.toml",
+
+  // ── TypeScript / React ────────────────────────────────────────────────────
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "eslint.options": {
+    "overrideConfigFile": "${workspaceFolder}/eslint.config.mjs"
+  },
+  "typescript.tsdk": "${workspaceFolder}/node_modules/typescript/lib",
+
+  // ── SCSS / Sass ───────────────────────────────────────────────────────────
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // ── Django Templates / Jinja2 ─────────────────────────────────────────────
+  "files.associations": {
+    "*.j2": "jinja",
+    "*.html": "django-html",
+    "docker-compose*.yml": "dockercompose",
+    "*.env.example": "properties"
+  },
+
+  // ── YAML ─────────────────────────────────────────────────────────────────
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.{yml,yaml}",
+    "https://json.schemastore.org/docker-compose.json": "docker-compose*.yml",
+    "https://json.schemastore.org/ansible-playbook.json": "ansible/**/*.{yml,yaml}"
+  },
+
+  // ── Editor General ────────────────────────────────────────────────────────
+  "editor.rulers": [79],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // ── Search / Explorer Excludes ────────────────────────────────────────────
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/static/dist": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/anthias_app/migrations": true,
+    "**/api/migrations": true,
+    "**/.venv": true,
+    "**/uv.lock": true
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.venv": true,
+    "**/static/dist": true
+  },
+
+  // ── Test Explorer ─────────────────────────────────────────────────────────
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": true,
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    ".",
+    "-p",
+    "test_*.py"
+  ],
+
+  // ── Docker ────────────────────────────────────────────────────────────────
+  "docker.defaultRegistryPath": "ghcr.io/screenly",
+
+  // ── Redis Client ─────────────────────────────────────────────────────────
+  "redis.connections": [
+    {
+      "name": "Anthias Dev Redis",
+      "host": "localhost",
+      "port": 6379,
+      "db": 0
+    }
+  ]
+}

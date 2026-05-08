@@ -96,6 +96,11 @@ def send_telemetry() -> bool:
     once per TELEMETRY_COOLDOWN_TTL via Redis so frequent celery
     restarts don't multiply traffic. Returns True if an event was sent.
     """
+    # TELEMETRY_ENABLED=false disables all outbound analytics.
+    # Recommended for school/institutional deployments (COPPA/FERPA).
+    if os.getenv('TELEMETRY_ENABLED', 'true').strip().lower() == 'false':
+        return False
+
     if settings['analytics_opt_out'] or is_ci():
         return False
 

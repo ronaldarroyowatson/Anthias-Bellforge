@@ -64,6 +64,12 @@ jobs:
           docker compose exec anthias-test \
             ./manage.py test --noinput --parallel --exclude-tag=integration
 
+      - name: Run display pipeline regression tests
+        if: inputs.test-type == 'python'
+        run: |
+          docker compose exec anthias-test \
+            bash ./bin/run_display_pipeline_tests.sh
+
       - name: Setup integration test environment
         if: inputs.test-type == 'python'
         run: |

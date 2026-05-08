@@ -1,0 +1,42 @@
+{
+  "recommendations": [
+    // --- Python ---
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.mypy-type-checker",
+    "charliermarsh.ruff",
+
+    // --- TypeScript / React / Frontend ---
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "syler.sass-indented",
+
+    // --- Django / Jinja2 Templates ---
+    "batisteo.vscode-django",
+    "wholroyd.jinja",
+
+    // --- C++ / Qt WebView ---
+    "ms-vscode.cpptools",
+    "twxs.cmake",
+
+    // --- Docker & DevOps ---
+    "ms-azuretools.vscode-docker",
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode-remote.vscode-remote-extensionpack",
+    "redhat.ansible",
+
+    // --- Redis / API ---
+    "cweijan.vscode-redis-client",
+    "humao.rest-client",
+    "42crunch.vscode-openapi",
+
+    // --- YAML / TOML / Config ---
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+
+    // --- Git / GitHub ---
+    "github.copilot",
+    "github.copilot-chat",
+    "eamodio.gitlens"
+  ]
+}

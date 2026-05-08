@@ -276,6 +276,34 @@ export QT_LOGGING_RULES="*.debug=true"
 export QT_QPA_EGLFS_DEBUG=1
 ```
 
+For display black-screen investigations on devices, collect a single bundle
+with host + compose + viewer evidence:
+
+```
+./bin/collect_display_debug_bundle.sh
+```
+
+For end-to-end remote automation (SSH into Pi, update code, restart compose,
+run display tests, collect telemetry, and pull bundle locally), run:
+
+```bash
+python3 ./bin/remote_pi_display_doctor.py --host <pi-host-or-ip> --sync-branch <branch>
+```
+
+Notes:
+
+- Requires `ssh` and `scp` on the local machine.
+- Default remote repo path is `~/Anthias-Bellforge`.
+- Artifacts are saved under `artifacts/pi-display-doctor/<timestamp>/`.
+- Use `--no-sync`, `--skip-tests`, or `--skip-bundle` for scoped runs.
+
+This writes a timestamped directory under `/tmp/` and a `.tar.gz` archive with:
+
+- Boot display config (`/boot/firmware/config.txt`, kernel cmdline)
+- DRM/KMS connector and `/dev/dri` state
+- `anthias-dev` journal and compose service logs
+- Viewer process/env snapshots and a short EGLFS probe run
+
 The Anthias WebView is a custom-built web browser based on the [Qt](https://www.qt.io/) toolkit framework.
 The browser is assembled with a Dockerfile and built by a `webview/build_qt#.sh` script.
 
