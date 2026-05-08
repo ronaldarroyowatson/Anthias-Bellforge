@@ -119,6 +119,8 @@ def _sync_local_display_files(
 ) -> list[str]:
     repo_root = Path(__file__).resolve().parents[1]
     files_to_sync = [
+        'anthias_app/views.py',
+        'anthias_app/tests.py',
         'viewer/__init__.py',
         'viewer/utils.py',
         'viewer/render_probe.py',

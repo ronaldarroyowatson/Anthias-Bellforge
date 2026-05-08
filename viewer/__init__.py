@@ -2,13 +2,14 @@
 # Viewer runtime: startup splash, display transport, and playback loop.
 
 import logging
+import ipaddress
 import sys
 from glob import glob
 from os import getenv, path
 from signal import SIGALRM, signal
 from time import monotonic, sleep
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import django
 import pydbus
@@ -215,11 +216,66 @@ def _normalize_startup_host(raw_host: str) -> str:
     if host.startswith('http://') or host.startswith('https://'):
         return host
 
+    try:
+        parsed_ip = ipaddress.ip_address(host.strip('[]'))
+        if isinstance(parsed_ip, ipaddress.IPv6Address):
+            host = f'[{parsed_ip}]'
+        else:
+            host = str(parsed_ip)
+    except ValueError:
+        pass
+
     return f'http://{host}'
 
 
+def _is_local_startup_host(raw_host: str) -> bool:
+    value = raw_host.strip()
+    if not value:
+        return False
+
+    parse_target = value if '://' in value else f'//{value}'
+    parsed = urlsplit(parse_target)
+    host = (parsed.hostname or value).strip().strip('[]').lower()
+    if host in {'localhost', '0.0.0.0', '::1'}:
+        return True
+    return host.startswith('127.')
+
+
+def _first_non_local_candidate(raw_candidates: str) -> str:
+    for token in raw_candidates.replace(',', ' ').split():
+        candidate = token.strip()
+        if not candidate:
+            continue
+
+        try:
+            parsed_ip = ipaddress.ip_address(candidate.strip('[]'))
+        except ValueError:
+            continue
+
+        if parsed_ip.is_loopback or parsed_ip.is_unspecified:
+            continue
+
+        return candidate
+    return ''
+
+
+def _resolve_startup_connect_url() -> str:
+    configured_host = getenv('MY_IP', '').strip()
+    if configured_host and not _is_local_startup_host(configured_host):
+        return _normalize_startup_host(configured_host)
+
+    node_ip_candidates = _first_non_local_candidate(get_node_ip())
+    if node_ip_candidates:
+        return _normalize_startup_host(node_ip_candidates)
+
+    if configured_host:
+        return _normalize_startup_host(configured_host)
+
+    return _normalize_startup_host('anthias.local')
+
+
 def _build_offline_splash_url() -> str:
-    connect_url = _normalize_startup_host(getenv('MY_IP', ''))
+    connect_url = _resolve_startup_connect_url()
     html = f"""<!doctype html>
 <html lang="en">
 <head>

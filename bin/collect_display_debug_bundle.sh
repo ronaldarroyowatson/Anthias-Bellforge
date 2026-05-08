@@ -52,6 +52,8 @@ run_capture viewer_env docker exec "$VIEWER_CONTAINER" env
 run_capture viewer_drm sh -c "docker exec $VIEWER_CONTAINER sh -c 'ls -la /dev/dri; ls -la /sys/class/drm; for p in /sys/class/drm/card*-*/status; do echo \"\$p: \$(cat \$p 2>/dev/null)\"; done'"
 run_capture viewer_dri_holders sh -c "docker exec $VIEWER_CONTAINER sh -c 'fuser -v /dev/dri/card* /dev/dri/renderD* 2>/dev/null || true'"
 run_capture viewer_web_ping docker exec "$VIEWER_CONTAINER" curl -sS -o /dev/null -w "%{http_code}\n" http://anthias-server:8080/splash-page
+run_capture viewer_display_html sh -c "docker exec $VIEWER_CONTAINER sh -c 'cat /tmp/display.html 2>/dev/null || echo display-html-missing'"
+run_capture viewer_display_url_line sh -c "docker exec $VIEWER_CONTAINER sh -c 'grep -n \"class=\\\"url\\\"\" /tmp/display.html 2>/dev/null || echo display-url-line-missing'"
 run_capture viewer_webview_proc_environ sh -c "docker exec $VIEWER_CONTAINER sh -c 'set -- \$(pidof AnthiasWebview 2>/dev/null || true); pid=\${1:-}; if [ -n \"\$pid\" ]; then cat /proc/\$pid/environ | tr \"\\0\" \"\\n\"; else echo \"AnthiasWebview not running\"; fi'"
 
 # Run a short-lived foreground webview process strictly for diagnostics.

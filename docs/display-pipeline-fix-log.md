@@ -226,3 +226,30 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - viewer logs from `artifacts/pi-display-doctor/20260508T165825Z/anthias-display-debug-20260508T165825Z.tar.gz` no longer include prior DRM permission-denied signatures.
   - user runtime validation confirms display is visible and showing Anthias startup screen.
 - Status: resolved via host DRM-owner release (display manager stop) in automated Pi doctor flow.
+
+### ISSUE-020: Startup splash could advertise localhost despite reachable LAN IP
+- Symptoms: startup splash could still show localhost-style guidance when `MY_IP` was local/loopback or when candidate parsing accepted non-IP tokens.
+- Impact: users on other devices could receive non-routable startup guidance during first boot/offline fallback.
+- Debug evidence: remote run artifacts and startup fallback analysis showed LAN URL selection was not consistently prioritized.
+- Fix:
+  - add viewer startup URL resolver that prefers valid non-local IP candidates and falls back to `anthias.local`.
+  - harden server `splash_page` to filter loopback/unspecified addresses and use `anthias.local` fallback instead of localhost.
+  - add regression tests for both viewer and server startup-address selection behavior.
+- Files:
+  - viewer/__init__.py
+  - tests/test_viewer.py
+  - anthias_app/views.py
+  - anthias_app/tests.py
+- Status: fixed in code and validated in Pi doctor run `artifacts/pi-display-doctor/20260508T171214Z/summary.json`.
+
+### ISSUE-021: Bundle lacked direct capture of rendered startup HTML URL line
+- Symptoms: diagnostics included viewer/system logs but not the actual offline splash HTML payload rendered in container.
+- Impact: extra manual shell probing was required to verify displayed startup URL, slowing regression triage.
+- Debug evidence: run `artifacts/pi-display-doctor/20260508T171214Z/` required manual follow-up to inspect `/tmp/display.html`.
+- Fix:
+  - add `viewer_display_html.txt` and `viewer_display_url_line.txt` captures to display debug bundle.
+  - include startup splash server files in remote sync set so Pi doctor runs validate current startup-address behavior end-to-end.
+- Files:
+  - bin/collect_display_debug_bundle.sh
+  - bin/remote_pi_display_doctor.py
+- Status: fixed in code, pending next bundle run confirmation.

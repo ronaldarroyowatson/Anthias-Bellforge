@@ -63,13 +63,16 @@ def splash_page(request: HttpRequest) -> HttpResponse:
         except ValueError:
             continue
 
+        if ip_address_object.is_loopback or ip_address_object.is_unspecified:
+            continue
+
         if isinstance(ip_address_object, ipaddress.IPv6Address):
             ip_addresses.append(f'http://[{ip_address}]')
         else:
             ip_addresses.append(f'http://{ip_address}')
 
     if not ip_addresses:
-        ip_addresses.append('http://localhost')
+        ip_addresses.append('http://anthias.local')
 
     return template(
         request,

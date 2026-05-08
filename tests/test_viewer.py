@@ -9,6 +9,7 @@ import unittest
 from time import sleep
 from typing import Any
 from unittest import mock
+from urllib.parse import unquote
 
 sys.modules.setdefault('pydbus', mock.Mock())
 
@@ -276,6 +277,32 @@ class TestDisplayPipelineRouting(ViewerTestCase):
             offline_url = self.u._build_offline_splash_url()
 
         self.assertTrue(offline_url.startswith('data:text/html,'))
+
+    def test_offline_splash_prefers_non_local_node_ip(self) -> None:
+        with (
+            mock.patch.object(self.u, 'getenv', return_value='localhost'),
+            mock.patch.object(
+                self.u, 'get_node_ip', return_value='192.168.2.180'
+            ),
+        ):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://192.168.2.180', rendered_html)
+
+    def test_offline_splash_uses_first_non_local_candidate(self) -> None:
+        with (
+            mock.patch.object(self.u, 'getenv', return_value='localhost'),
+            mock.patch.object(
+                self.u,
+                'get_node_ip',
+                return_value='127.0.0.1 10.0.0.20 192.168.1.50',
+            ),
+        ):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://10.0.0.20', rendered_html)
 
 
 class TestViewerNavigationIdempotency(ViewerTestCase):

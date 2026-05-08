@@ -7,6 +7,7 @@ from django.http import Http404
 from django.http.response import HttpResponseBase
 from django.test import RequestFactory, TestCase
 
+from anthias_app import views
 from anthias_app import views_files
 
 # Standard private/public IP literals reused across the IP-allowlist
@@ -143,3 +144,35 @@ class StaticWithMimeViewTest(TestCase):
         )
         response = views_files.static_with_mime(request, filename='app.css')
         self.assertEqual(response['Content-Type'], 'text/css')
+
+
+class SplashPageViewTest(TestCase):
+    def setUp(self) -> None:
+        self.factory = RequestFactory()
+
+    def test_splash_page_skips_loopback_addresses(self) -> None:
+        request = self.factory.get('/splash-page')
+
+        with mock.patch.object(
+            views,
+            'get_node_ip',
+            return_value='127.0.0.1 192.168.1.20',
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://192.168.1.20')
+        self.assertNotContains(response, 'http://127.0.0.1')
+        self.assertNotContains(response, 'http://localhost')
+
+    def test_splash_page_uses_anthias_local_when_no_ip_found(self) -> None:
+        request = self.factory.get('/splash-page')
+
+        with mock.patch.object(
+            views,
+            'get_node_ip',
+            return_value='Unable to retrieve IP.',
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://anthias.local')
+        self.assertNotContains(response, 'http://localhost')
