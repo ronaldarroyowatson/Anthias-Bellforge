@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # Viewer runtime: startup splash, display transport, and playback loop.
 
-import logging
 import ipaddress
+import logging
 import sys
 from glob import glob
 from os import getenv, path

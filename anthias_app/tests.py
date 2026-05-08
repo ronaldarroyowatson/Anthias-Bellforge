@@ -7,8 +7,7 @@ from django.http import Http404
 from django.http.response import HttpResponseBase
 from django.test import RequestFactory, TestCase
 
-from anthias_app import views
-from anthias_app import views_files
+from anthias_app import views, views_files
 
 # Standard private/public IP literals reused across the IP-allowlist
 # tests below. Centralised so Sonar's S1313 ("don't hardcode IPs") is
