@@ -51,7 +51,7 @@ services:
       - ./:/usr/src/app/
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
 
 volumes:
     anthias-data:
