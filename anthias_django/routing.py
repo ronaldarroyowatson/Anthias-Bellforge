@@ -1,4 +1,4 @@
-﻿from django.urls import re_path
+from django.urls import re_path
 
 from anthias_app.consumers import AssetConsumer
 

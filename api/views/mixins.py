@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import tarfile
 import uuid
 from base64 import b64encode

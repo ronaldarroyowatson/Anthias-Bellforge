@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Viewer runtime: startup splash, display transport, and playback loop.
 
 import ipaddress

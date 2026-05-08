@@ -1,4 +1,4 @@
-﻿"""
+"""
 Django settings for anthias_django project.
 
 For more information on this file, see

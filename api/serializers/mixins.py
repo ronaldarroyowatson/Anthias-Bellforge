@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from inspect import cleandoc
 from os import path, rename
 from typing import Any

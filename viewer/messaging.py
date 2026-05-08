@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from threading import Thread
 from time import sleep
 from typing import Any, Callable

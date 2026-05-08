@@ -1,4 +1,4 @@
-﻿"""
+"""
 Common test utilities and constants for the Anthias API tests.
 """
 

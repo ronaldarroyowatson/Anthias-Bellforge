@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Mirror immutable <short-hash>-<board> tags onto the floating
 # latest-<board> tag for one registry namespace. Called twice from
 # .github/workflows/docker-build.yaml â€” once for GHCR (hard-fail)

@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from os import getenv, path
 from typing import Any
 

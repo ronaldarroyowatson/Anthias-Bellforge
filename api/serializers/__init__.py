@@ -1,4 +1,4 @@
-﻿from datetime import timezone
+from datetime import timezone
 from os import path
 from typing import Any
 

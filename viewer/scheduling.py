@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from datetime import datetime
 from os import path
 from random import shuffle

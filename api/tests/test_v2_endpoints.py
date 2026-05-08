@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for V2 API endpoints.
 """
 

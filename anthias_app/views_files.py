@@ -1,4 +1,4 @@
-﻿import ipaddress
+import ipaddress
 import mimetypes
 import os
 from functools import wraps

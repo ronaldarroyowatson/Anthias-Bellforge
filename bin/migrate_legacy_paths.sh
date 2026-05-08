@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 #
 # Idempotent host-side migration from the legacy `screenly` directory
 # names to `anthias`:

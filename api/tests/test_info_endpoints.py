@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for Info API endpoints (v1 and v2).
 """
 

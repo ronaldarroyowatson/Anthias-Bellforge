@@ -1,4 +1,4 @@
-﻿from datetime import timezone
+from datetime import timezone
 from typing import Any
 
 from drf_spectacular.types import OpenApiTypes

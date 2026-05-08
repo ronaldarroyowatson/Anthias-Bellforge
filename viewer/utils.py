@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import threading
 from os import path, utime
 from time import sleep

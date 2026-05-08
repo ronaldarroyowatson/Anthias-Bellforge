@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Tests viewer utility helpers used by startup display sequencing.
 
 import importlib.util

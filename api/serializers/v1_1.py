@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import timezone
 from os import path, rename
 from typing import Any

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Run display pipeline regression tests in a Linux environment.
 set -euo pipefail
 
