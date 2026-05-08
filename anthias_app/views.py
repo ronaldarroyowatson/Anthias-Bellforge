@@ -1,4 +1,5 @@
-﻿import ipaddress
+import ipaddress
+import os
 
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
@@ -73,8 +74,18 @@ def splash_page(request: HttpRequest) -> HttpResponse:
             ip_addresses.append(f'http://{ip_address}')
 
     if not ip_addresses:
-        hostname = get_node_hostname().strip().lower() or 'anthias'
-        ip_addresses.append(f'http://{hostname}.local')
+        hostname = get_node_hostname().strip().lower()
+        if hostname and hostname != 'anthias':
+            ip_addresses.append(f'http://{hostname}.local')
+        elif os.getenv('ENVIRONMENT') == 'development':
+            host = request.get_host().strip()
+            if host and host != 'testserver':
+                scheme = 'https' if request.is_secure() else 'http'
+                ip_addresses.append(f'{scheme}://{host}')
+            else:
+                ip_addresses.append('http://anthias.local')
+        else:
+            ip_addresses.append('http://anthias.local')
 
     return template(
         request,

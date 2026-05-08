@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 from unittest import mock
@@ -202,4 +202,27 @@ class SplashPageViewTest(TestCase):
             response = views.splash_page(request)
 
         self.assertContains(response, 'http://rpi5dev.local')
+        self.assertNotContains(response, 'http://anthias.local')
+
+    def test_splash_page_uses_request_host_in_development_when_no_hostname(
+        self,
+    ) -> None:
+        request = self.factory.get('/splash-page', HTTP_HOST='localhost:8000')
+
+        with (
+            mock.patch.dict('os.environ', {'ENVIRONMENT': 'development'}),
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                views,
+                'get_node_hostname',
+                return_value='',
+            ),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://localhost:8000')
         self.assertNotContains(response, 'http://anthias.local')
