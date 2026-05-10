@@ -4,10 +4,17 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
+import requests
 import sh
 from django.test import TestCase
 
-from lib.utils import handler, template_handle_unicode, url_fails
+from lib.utils import (
+    handler,
+    is_internet_reachable,
+    probe_management_server,
+    template_handle_unicode,
+    url_fails,
+)
 
 url_fail = 'http://doesnotwork.example.com'
 url_redir = 'http://example.com'
@@ -62,3 +69,37 @@ class StreamingURLProbeTest(TestCase):
         with patch('lib.utils.sh.Command') as mock_command:
             mock_command.side_effect = sh.CommandNotFound('ffprobe')
             self.assertFalse(url_fails('rtsp://example.com/stream'))
+
+
+class ManagementReachabilityProbeTest(TestCase):
+    def test_probe_management_server_uses_tcp_socket(self) -> None:
+        with patch('lib.utils.socket.create_connection') as mock_connection:
+            mock_connection.return_value.__enter__.return_value = object()
+            self.assertTrue(
+                probe_management_server('http://192.168.2.180:8000')
+            )
+            mock_connection.assert_called_once_with(
+                ('192.168.2.180', 8000), timeout=2.0
+            )
+
+    def test_probe_management_server_returns_false_when_unreachable(self) -> None:
+        with patch('lib.utils.socket.create_connection') as mock_connection:
+            mock_connection.side_effect = OSError('connection refused')
+            self.assertFalse(
+                probe_management_server('http://192.168.2.250:8000')
+            )
+
+    def test_probe_management_server_returns_false_for_invalid_url(self) -> None:
+        self.assertFalse(probe_management_server('not-a-url'))
+
+
+class InternetReachabilityProbeTest(TestCase):
+    def test_is_internet_reachable_true_on_204(self) -> None:
+        with patch('lib.utils.requests.get') as mock_get:
+            mock_get.return_value.status_code = 204
+            self.assertTrue(is_internet_reachable())
+
+    def test_is_internet_reachable_false_on_connection_error(self) -> None:
+        with patch('lib.utils.requests.get') as mock_get:
+            mock_get.side_effect = requests.ConnectionError('network down')
+            self.assertFalse(is_internet_reachable())

@@ -265,7 +265,7 @@ class SplashPageReachabilityTest(TestCase):
         request = self.factory.get('/splash-page')
 
         def _reachable_only_first(url: str, timeout: float = 2.0) -> bool:
-            return url == 'http://192.168.1.20'
+            return url.startswith('http://192.168.1.20')
 
         with (
             mock.patch.object(
@@ -282,8 +282,8 @@ class SplashPageReachabilityTest(TestCase):
         ):
             response = views.splash_page(request)
 
-        self.assertContains(response, 'http://192.168.1.20')
-        self.assertNotContains(response, 'http://192.168.1.99')
+        self.assertContains(response, 'http://192.168.1.20:8000')
+        self.assertNotContains(response, 'http://192.168.1.99:8000')
 
     def test_splash_shows_all_urls_when_none_are_reachable(self) -> None:
         # When every probe fails the view must fall back to showing all

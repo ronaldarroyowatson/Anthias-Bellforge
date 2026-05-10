@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import re
+import socket
 import string
 from datetime import datetime, timedelta
 from os import getenv, path, utime
@@ -454,21 +455,22 @@ def probe_management_server(url: str, timeout: float = 2.0) -> bool:
     returns False. The short default timeout keeps splash page rendering
     responsive even when a candidate IP is unreachable.
     """
-    probe_url = url.rstrip('/') + '/'
+    parsed_url = urlparse(url)
+    host = parsed_url.hostname
+    if not host:
+        return False
+
+    if parsed_url.port is not None:
+        port = parsed_url.port
+    elif parsed_url.scheme == 'https':
+        port = 443
+    else:
+        port = 80
+
     try:
-        response = requests.get(
-            probe_url,
-            allow_redirects=False,
-            timeout=timeout,
-            headers={'User-Agent': 'Anthias-ReachabilityProbe/1.0'},
-        )
-        # Any HTTP status < 500 means a server is answering on this address.
-        return response.status_code < 500
-    except (
-        requests.ConnectionError,
-        requests.exceptions.Timeout,
-        requests.exceptions.RequestException,
-    ):
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
         return False
 
 

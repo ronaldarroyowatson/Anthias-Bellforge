@@ -311,3 +311,19 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
 - Remaining risk:
   - physical panel visibility can still diverge from telemetry if connector routing/monitor state changes outside app control.
 - Status: mitigation in place and runtime healthy; continue reboot-level physical validation after each service/system update.
+
+### ISSUE-024: HTTP self-probe in splash URL filtering triggered recursive request storm
+- Symptoms: splash endpoint calls increased rapidly and remote curl checks to `/splash-page` could hang/timed out.
+- Impact: startup guidance validation path risked request recursion and unstable splash rendering under load.
+- Debug evidence:
+  - server logs showed repeated back-to-back `/splash-page` 200 responses from container-local clients.
+  - regression introduced when `probe_management_server()` used in-request HTTP GET probing for each candidate URL.
+- Fix:
+  - replace HTTP reachability probing with TCP socket connect probing in `probe_management_server()`.
+  - add deterministic tests for socket-based management probe and internet probe behavior.
+  - update splash reachability assertions to include non-default management port (`:8000`) in dev stack.
+- Files:
+  - lib/utils.py
+  - tests/test_utils.py
+  - anthias_app/tests.py
+- Status: fixed in code; pending final Pi runtime confirmation after redeploy.
