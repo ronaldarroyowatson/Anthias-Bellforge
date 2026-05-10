@@ -57,6 +57,37 @@ class UpdateTest(TestCase):
             timeout=1,
         )
 
+    def test_fetch_remote_hash_should_refresh_when_cache_is_stale(
+        self,
+    ) -> None:
+        with (
+            mock.patch.dict(
+                os.environ,
+                {
+                    'GIT_BRANCH': 'master',
+                },
+                clear=False,
+            ),
+            mock.patch('lib.github.r') as redis_mock,
+            mock.patch(
+                'lib.github.remote_branch_available',
+                mock.MagicMock(return_value=True),
+            ),
+            mock.patch('lib.github.requests_get') as requests_get_mock,
+            mock.patch('lib.github.get_git_hash', return_value=GIT_HASH_1),
+        ):
+            redis_mock.get.return_value = GIT_HASH_2
+            response = mock.MagicMock()
+            response.status_code = 200
+            response.json.return_value = {'object': {'sha': GIT_HASH_1}}
+            requests_get_mock.return_value = response
+
+            latest_sha, cache_updated = fetch_remote_hash()
+
+        self.assertEqual(latest_sha, GIT_HASH_1)
+        self.assertEqual(cache_updated, True)
+        requests_get_mock.assert_called_once()
+
     def test_is_up_to_date_should_return_value_depending_on_git_hashes(
         self,
     ) -> None:

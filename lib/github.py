@@ -134,32 +134,35 @@ def fetch_remote_hash() -> tuple[str | None, bool]:
         logging.error('Unable to get local Git branch')
         return None, False
 
-    get_cache = r.get('latest-remote-hash')
-    if not get_cache:
-        # Ensure the remote branch is available before trying
-        # to fetch the HEAD ref.
-        if not remote_branch_available(branch):
-            logging.error('Remote Git branch not available')
-            return None, False
-        github_repo = get_update_github_repo()
-        try:
-            resp = requests_get(
-                f'https://api.github.com/repos/{github_repo}/git/refs/heads/{branch}',  # noqa: E501
-                timeout=DEFAULT_REQUESTS_TIMEOUT,
-            )
-            resp.raise_for_status()
-        except exceptions.RequestException as exc:
-            handle_github_error(exc, 'remote branch HEAD')
-            return None, False
+    cache_key = 'latest-remote-hash'
+    get_cache = r.get(cache_key)
+    current_git_hash = get_git_hash()
+    if get_cache and current_git_hash and get_cache == current_git_hash:
+        return get_cache, False
 
-        logging.debug('Got response from GitHub: {}'.format(resp.status_code))
-        latest_sha = resp.json()['object']['sha']
-        r.set('latest-remote-hash', latest_sha)
+    # Ensure the remote branch is available before trying
+    # to fetch the HEAD ref.
+    if not remote_branch_available(branch):
+        logging.error('Remote Git branch not available')
+        return None, False
+    github_repo = get_update_github_repo()
+    try:
+        resp = requests_get(
+            f'https://api.github.com/repos/{github_repo}/git/refs/heads/{branch}',  # noqa: E501
+            timeout=DEFAULT_REQUESTS_TIMEOUT,
+        )
+        resp.raise_for_status()
+    except exceptions.RequestException as exc:
+        handle_github_error(exc, 'remote branch HEAD')
+        return None, False
 
-        # Cache the result for the REMOTE_BRANCH_STATUS_TTL
-        r.expire('latest-remote-hash', REMOTE_BRANCH_STATUS_TTL)
-        return latest_sha, True
-    return get_cache, False
+    logging.debug('Got response from GitHub: {}'.format(resp.status_code))
+    latest_sha = resp.json()['object']['sha']
+    r.set(cache_key, latest_sha)
+
+    # Cache the result for the REMOTE_BRANCH_STATUS_TTL
+    r.expire(cache_key, REMOTE_BRANCH_STATUS_TTL)
+    return latest_sha, True
 
 
 def _set_ghcr_error_backoff() -> None:
