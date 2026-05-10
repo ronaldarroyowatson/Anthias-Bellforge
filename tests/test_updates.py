@@ -27,93 +27,83 @@ class UpdateTest(TestCase):
 
     def test_fetch_remote_hash_should_use_configured_github_repo(self) -> None:
         with (
+            mock.patch.dict(
+                os.environ,
+                {
+                    'GIT_BRANCH': 'master',
+                    'ANTHIAS_UPDATE_GITHUB_REPO': 'owner/custom-anthias',
                 },
-                self,
+                clear=False,
             ),
-                test_cases = [
-                    (
-                        'master head matches local',
-                        {
-                            'latest_remote_hash': GIT_HASH_1,
-                            'git_hash': GIT_HASH_1,
-                            'git_short_hash': GIT_SHORT_HASH_1,
-                            'is_running_latest_published_image': True,
-                        },
-                        True,
-                    ),
-                    (
-                        'master ahead but published image matches',
-                        {
-                            'latest_remote_hash': GIT_HASH_2,
-                            'git_hash': GIT_HASH_1,
-                            'git_short_hash': GIT_SHORT_HASH_1,
-                            'is_running_latest_published_image': True,
-                        },
-                        True,
-                    ),
-                    (
-                        'master head matches local even when ghcr disagrees',
-                        {
-                            'latest_remote_hash': GIT_HASH_1,
-                            'git_hash': GIT_HASH_1,
-                            'git_short_hash': GIT_SHORT_HASH_1,
-                            'is_running_latest_published_image': False,
-                        },
-                        True,
-                    ),
-                    (
-                        'master ahead and published image older',
-                        {
-                            'latest_remote_hash': GIT_HASH_2,
-                            'git_hash': GIT_HASH_1,
-                            'git_short_hash': GIT_SHORT_HASH_1,
-                            'is_running_latest_published_image': False,
-                        },
-                        False,
-                    ),
-                    (
-                        'master ahead and ghcr lookup inconclusive',
-                        {
-                            'latest_remote_hash': GIT_HASH_2,
-                            'git_hash': GIT_HASH_1,
-                            'git_short_hash': GIT_SHORT_HASH_1,
-                            'is_running_latest_published_image': None,
-                        },
-                        True,
-                    ),
-                ]
+            mock.patch('lib.github.r') as redis_mock,
+            mock.patch(
+                'lib.github.remote_branch_available',
+                mock.MagicMock(return_value=True),
+            ),
+            mock.patch('lib.github.requests_get') as requests_get_mock,
+        ):
+            redis_mock.get.return_value = None
+            response = mock.MagicMock()
+            response.status_code = 200
+            response.json.return_value = {'object': {'sha': GIT_HASH_2}}
+            requests_get_mock.return_value = response
 
-                for _, hashes, expected in test_cases:
-                    with self.subTest(hashes=hashes):
-                        os.environ['GIT_BRANCH'] = 'master'
-                        os.environ['DEVICE_TYPE'] = 'pi4'
+            latest_sha, cache_updated = fetch_remote_hash()
 
-                        latest_remote_hash = hashes['latest_remote_hash']
-                        git_hash = hashes['git_hash']
-                        git_short_hash = hashes['git_short_hash']
-                        published_match = hashes['is_running_latest_published_image']
+        self.assertEqual(latest_sha, GIT_HASH_2)
+        self.assertEqual(cache_updated, True)
+        requests_get_mock.assert_called_once_with(
+            'https://api.github.com/repos/owner/custom-anthias/git/refs/heads/master',  # noqa: E501
+            timeout=1,
+        )
 
-                        with (
-                            mock.patch(
-                                'lib.github.fetch_remote_hash',
-                                mock.MagicMock(
-                                    return_value=(latest_remote_hash, False)
-                                ),
-                            ),
-                            mock.patch(
-                                'lib.github.get_git_hash',
-                                mock.MagicMock(return_value=git_hash),
-                            ),
-                            mock.patch(
-                                'lib.github.get_git_short_hash',
-                                mock.MagicMock(return_value=git_short_hash),
-                            ),
-                            mock.patch(
-                                'lib.github.is_running_latest_published_image',
-                                mock.MagicMock(return_value=published_match),
-                            ),
-                        ):
-                            self.assertEqual(is_up_to_date(), expected)
+    def test_is_up_to_date_should_return_value_depending_on_git_hashes(
+        self,
+    ) -> None:
+        test_cases: list[tuple[str, dict[str, Any], bool]] = [
+            (
+                'master head matches local',
+                {
+                    'latest_remote_hash': GIT_HASH_1,
+                    'git_hash': GIT_HASH_1,
+                    'git_short_hash': GIT_SHORT_HASH_1,
+                    'is_running_latest_published_image': True,
+                },
+                True,
+            ),
+            (
+                'master ahead but published image matches',
+                {
+                    'latest_remote_hash': GIT_HASH_2,
+                    'git_hash': GIT_HASH_1,
+                    'git_short_hash': GIT_SHORT_HASH_1,
+                    'is_running_latest_published_image': True,
+                },
+                True,
+            ),
+            (
+                'master head matches local even when ghcr disagrees',
+                {
+                    'latest_remote_hash': GIT_HASH_1,
+                    'git_hash': GIT_HASH_1,
+                    'git_short_hash': GIT_SHORT_HASH_1,
+                    'is_running_latest_published_image': False,
+                },
+                True,
+            ),
+            (
+                'master ahead and published image older',
+                {
+                    'latest_remote_hash': GIT_HASH_2,
+                    'git_hash': GIT_HASH_1,
+                    'git_short_hash': GIT_SHORT_HASH_1,
+                    'is_running_latest_published_image': False,
+                },
+                False,
+            ),
+            (
+                'master ahead and ghcr lookup inconclusive',
+                {
                     'latest_remote_hash': GIT_HASH_2,
                     'git_hash': GIT_HASH_1,
                     'git_short_hash': GIT_SHORT_HASH_1,
@@ -121,35 +111,35 @@ class UpdateTest(TestCase):
                 },
                 True,
             ),
-        ],
-    )
-    def test_is_up_to_date_should_return_value_depending_on_git_hashes(
-        self, hashes: dict[str, Any], expected: bool
-    ) -> None:
-        os.environ['GIT_BRANCH'] = 'master'
-        os.environ['DEVICE_TYPE'] = 'pi4'
+        ]
 
-        latest_remote_hash = hashes['latest_remote_hash']
-        git_hash = hashes['git_hash']
-        git_short_hash = hashes['git_short_hash']
-        published_match = hashes['is_running_latest_published_image']
+        for case_name, hashes, expected in test_cases:
+            with self.subTest(case_name=case_name):
+                os.environ['GIT_BRANCH'] = 'master'
+                os.environ['DEVICE_TYPE'] = 'pi4'
 
-        with (
-            mock.patch(
-                'lib.github.fetch_remote_hash',
-                mock.MagicMock(return_value=(latest_remote_hash, False)),
-            ),
-            mock.patch(
-                'lib.github.get_git_hash',
-                mock.MagicMock(return_value=git_hash),
-            ),
-            mock.patch(
-                'lib.github.get_git_short_hash',
-                mock.MagicMock(return_value=git_short_hash),
-            ),
-            mock.patch(
-                'lib.github.is_running_latest_published_image',
-                mock.MagicMock(return_value=published_match),
-            ),
-        ):
-            self.assertEqual(is_up_to_date(), expected)
+                with (
+                    mock.patch(
+                        'lib.github.fetch_remote_hash',
+                        mock.MagicMock(
+                            return_value=(hashes['latest_remote_hash'], False)
+                        ),
+                    ),
+                    mock.patch(
+                        'lib.github.get_git_hash',
+                        mock.MagicMock(return_value=hashes['git_hash']),
+                    ),
+                    mock.patch(
+                        'lib.github.get_git_short_hash',
+                        mock.MagicMock(return_value=hashes['git_short_hash']),
+                    ),
+                    mock.patch(
+                        'lib.github.is_running_latest_published_image',
+                        mock.MagicMock(
+                            return_value=hashes[
+                                'is_running_latest_published_image'
+                            ]
+                        ),
+                    ),
+                ):
+                    self.assertEqual(is_up_to_date(), expected)
