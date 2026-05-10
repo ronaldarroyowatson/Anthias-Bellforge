@@ -258,6 +258,22 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
 - Symptoms: display guidance could show `http://anthias.local` even when device hostname/mDNS was not `anthias`, causing operators to follow a non-resolving address.
 - Impact: management UI could appear unreachable during startup/offline fallback even when the device was reachable at `<actual-hostname>.local` or LAN IP.
 - Debug evidence:
+
+## 2026-05-10
+
+### ISSUE-023: Reboot regression when host display manager reacquired DRM master
+- Symptoms: after reboot, Pi monitor returned to blank output while server/splash endpoints remained reachable over network.
+- Impact: viewer container stayed up but could not present frames on HDMI, creating a false impression of an application-level splash/display regression.
+- Debug evidence:
+  - viewer logs repeatedly showed `Could not set DRM mode for screen HDMI1 (Permission denied)` and `Could not queue DRM page flip on screen HDMI1 (Permission denied)`.
+  - host check showed `Xorg` (lightdm) owning `/dev/dri/card1` and `/dev/dri/renderD128`.
+  - render telemetry remained healthy (`viewer.render.last_command`, `viewer.render.last_result`, `viewer.render.history`), proving render intent/debug path was active while scanout failed.
+- Fix:
+  - immediate runtime mitigation on Pi: disable/mask `lightdm` and restart viewer/server stack.
+  - persistent fix in repo: add `ExecStartPre` display-manager stop guards to `bin/anthias-dev.service` before compose startup.
+- Files:
+  - bin/anthias-dev.service
+- Status: fixed in code and validated on Pi runtime after restart (DRM permission-denied signatures cleared; splash and management UI reachable).
   - server `splash_page` fallback used hardcoded `http://anthias.local` when no routable IP candidates were returned.
   - viewer offline splash resolver also defaulted to `anthias.local` when IP lookup was unavailable.
   - Pi diagnostics captured host `HOSTNAME=RPi5Dev` while rendered startup guidance still showed `anthias.local`.
@@ -274,3 +290,24 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - viewer/__init__.py
   - tests/test_viewer.py
 - Status: fixed in code; test execution blocked in this session due missing Docker Linux engine and missing local Django dependency.
+
+### ISSUE-022 Status Update
+- Evidence update: the original ISSUE-022 section was split by the later ISSUE-023 append and now contains fragmented bullets.
+- Clarified debug evidence:
+  - `splash_page` fallback previously used `http://anthias.local` when no routable IP candidate was available.
+  - viewer offline fallback also defaulted to `anthias.local` when IP lookup failed.
+  - Pi diagnostics captured hostname `RPi5Dev` while startup guidance still showed `anthias.local`.
+- Clarified fix summary:
+  - host agent publishes hostname to Redis key `host_hostname`.
+  - shared hostname resolver in `lib.utils.get_node_hostname()`.
+  - startup URL selection prefers `http://<hostname>.local` before `anthias.local`.
+- Status: resolved in code (supersedes fragmented ISSUE-022 bullets above).
+
+### ISSUE-023 Status Update
+- Evidence update:
+  - latest Pi runtime checks show display managers inactive (`lightdm`, `gdm3`, `sddm`, `xdm` all `inactive`).
+  - viewer render telemetry remains active (`viewer.render.last_command` and `viewer.render.last_result` continue to show splash-page rendering activity).
+  - server logs continue serving `/splash-page` with HTTP 200 responses.
+- Remaining risk:
+  - physical panel visibility can still diverge from telemetry if connector routing/monitor state changes outside app control.
+- Status: mitigation in place and runtime healthy; continue reboot-level physical validation after each service/system update.

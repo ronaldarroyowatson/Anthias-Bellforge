@@ -27,7 +27,8 @@ PUBLISHED_IMAGE_MATCH_TTL = 10 * 60
 # to pick up a fresh publish quickly once CI finishes.
 PUBLISHED_IMAGE_UNKNOWN_TTL = 60
 
-GHCR_IMAGE_REPO = 'screenly/anthias-server'
+DEFAULT_UPDATE_GITHUB_REPO = 'ronaldarroyowatson/Anthias-Bellforge'
+DEFAULT_GHCR_IMAGE_REPO = 'screenly/anthias-server'
 GHCR_MANIFEST_ACCEPT = ','.join(
     [
         'application/vnd.docker.distribution.manifest.v2+json',
@@ -38,6 +39,24 @@ GHCR_MANIFEST_ACCEPT = ','.join(
 )
 
 DEFAULT_REQUESTS_TIMEOUT = 1  # in seconds
+
+
+def get_update_github_repo() -> str:
+    repo = os.getenv(
+        'ANTHIAS_UPDATE_GITHUB_REPO', DEFAULT_UPDATE_GITHUB_REPO
+    ).strip()
+    if not repo:
+        return DEFAULT_UPDATE_GITHUB_REPO
+    return repo
+
+
+def get_ghcr_image_repo() -> str:
+    repo = os.getenv(
+        'ANTHIAS_UPDATE_GHCR_IMAGE_REPO', DEFAULT_GHCR_IMAGE_REPO
+    ).strip()
+    if not repo:
+        return DEFAULT_GHCR_IMAGE_REPO
+    return repo
 
 
 def handle_github_error(
@@ -78,9 +97,10 @@ def remote_branch_available(branch: str | None) -> bool | None:
     # don't silently fail once the repo passes 30 branches: GitHub's
     # /branches list is alphabetically paginated and dropped `master` off
     # the first page once auto-generated branches piled up.
+    github_repo = get_update_github_repo()
     try:
         resp = requests_get(
-            f'https://api.github.com/repos/screenly/anthias/branches/{branch}',
+            f'https://api.github.com/repos/{github_repo}/branches/{branch}',
             timeout=DEFAULT_REQUESTS_TIMEOUT,
         )
     except exceptions.RequestException as exc:
@@ -121,9 +141,10 @@ def fetch_remote_hash() -> tuple[str | None, bool]:
         if not remote_branch_available(branch):
             logging.error('Remote Git branch not available')
             return None, False
+        github_repo = get_update_github_repo()
         try:
             resp = requests_get(
-                f'https://api.github.com/repos/screenly/anthias/git/refs/heads/{branch}',  # noqa: E501
+                f'https://api.github.com/repos/{github_repo}/git/refs/heads/{branch}',  # noqa: E501
                 timeout=DEFAULT_REQUESTS_TIMEOUT,
             )
             resp.raise_for_status()
@@ -147,12 +168,13 @@ def _set_ghcr_error_backoff() -> None:
 
 
 def _get_ghcr_anonymous_token() -> str | None:
+    ghcr_image_repo = get_ghcr_image_repo()
     try:
         resp = requests_get(
             'https://ghcr.io/token',
             params={
                 'service': 'ghcr.io',
-                'scope': f'repository:{GHCR_IMAGE_REPO}:pull',
+                'scope': f'repository:{ghcr_image_repo}:pull',
             },
             timeout=DEFAULT_REQUESTS_TIMEOUT,
         )
@@ -181,9 +203,10 @@ def _get_ghcr_manifest_digest(tag: str, token: str) -> str | None:
     # dropped it), so we don't trigger the backoff. Any other failure
     # (network error, 5xx, 429) is transient and *does* trigger the
     # backoff so is_up_to_date() doesn't keep retrying every page load.
+    ghcr_image_repo = get_ghcr_image_repo()
     try:
         resp = requests_head(
-            f'https://ghcr.io/v2/{GHCR_IMAGE_REPO}/manifests/{tag}',
+            f'https://ghcr.io/v2/{ghcr_image_repo}/manifests/{tag}',
             headers={
                 'Authorization': f'Bearer {token}',
                 'Accept': GHCR_MANIFEST_ACCEPT,

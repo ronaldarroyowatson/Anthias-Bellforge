@@ -8,6 +8,10 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/home/pi/Anthias-Bellforge
+ExecStartPre=-/usr/bin/systemctl stop lightdm
+ExecStartPre=-/usr/bin/systemctl stop gdm3
+ExecStartPre=-/usr/bin/systemctl stop sddm
+ExecStartPre=-/usr/bin/systemctl stop xdm
 ExecStart=/bin/bash -lc 'export MY_IP=$(hostname -I | awk '"'"'{print $1}'"'"'); /usr/bin/docker compose -f docker-compose.dev.yml -f docker-compose.viewer.yml up -d'
 ExecStop=/usr/bin/docker compose -f docker-compose.dev.yml -f docker-compose.viewer.yml down
 TimeoutStartSec=0

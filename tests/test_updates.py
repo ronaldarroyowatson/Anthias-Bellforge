@@ -1,11 +1,11 @@
 import logging
 import os
 from typing import Any
+from unittest import mock
 
-import mock
 from unittest_parametrize import ParametrizedTestCase, parametrize
 
-from lib.github import is_up_to_date
+from lib.github import fetch_remote_hash, get_update_github_repo, is_up_to_date
 
 GIT_HASH_1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
 GIT_SHORT_HASH_1 = 'da39a3e'
@@ -16,6 +16,47 @@ logging.disable(logging.CRITICAL)
 
 
 class UpdateTest(ParametrizedTestCase):
+    def test_get_update_github_repo_should_default_to_bellforge_repo(
+        self,
+    ) -> None:
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                get_update_github_repo(),
+                'ronaldarroyowatson/Anthias-Bellforge',
+            )
+
+    def test_fetch_remote_hash_should_use_configured_github_repo(self) -> None:
+        with (
+            mock.patch.dict(
+                os.environ,
+                {
+                    'GIT_BRANCH': 'master',
+                    'ANTHIAS_UPDATE_GITHUB_REPO': 'owner/custom-anthias',
+                },
+                clear=False,
+            ),
+            mock.patch('lib.github.r') as redis_mock,
+            mock.patch(
+                'lib.github.remote_branch_available',
+                mock.MagicMock(return_value=True),
+            ),
+            mock.patch('lib.github.requests_get') as requests_get_mock,
+        ):
+            redis_mock.get.return_value = None
+            response = mock.MagicMock()
+            response.status_code = 200
+            response.json.return_value = {'object': {'sha': GIT_HASH_2}}
+            requests_get_mock.return_value = response
+
+            latest_sha, cache_updated = fetch_remote_hash()
+
+        self.assertEqual(latest_sha, GIT_HASH_2)
+        self.assertEqual(cache_updated, True)
+        requests_get_mock.assert_called_once_with(
+            'https://api.github.com/repos/owner/custom-anthias/git/refs/heads/master',  # noqa: E501
+            timeout=1,
+        )
+
     @mock.patch(
         'lib.github.fetch_remote_hash',
         mock.MagicMock(return_value=(None, False)),
