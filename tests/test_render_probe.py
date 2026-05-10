@@ -103,6 +103,31 @@ class RenderProbeTest(unittest.TestCase):
             render_probe.MAX_HISTORY_ITEMS,
         )
 
+    def test_record_display_state_persists_state_and_heartbeat(self) -> None:
+        redis_client = FakeRedis()
+
+        event = render_probe.record_display_state(
+            redis_connection=redis_client,
+            media_type='webpage',
+            uri='http://example.local/splash-page',
+            render_status='success',
+        )
+
+        persisted_state = json.loads(
+            redis_client.key_values[render_probe.DISPLAY_STATE_KEY]
+        )
+        self.assertEqual(persisted_state['event_type'], 'display_state')
+        self.assertEqual(persisted_state['media_type'], 'webpage')
+        self.assertEqual(
+            persisted_state['uri'], 'http://example.local/splash-page'
+        )
+        self.assertEqual(persisted_state['render_status'], 'success')
+        self.assertEqual(
+            redis_client.key_values[render_probe.DISPLAY_HEARTBEAT_KEY],
+            persisted_state['timestamp'],
+        )
+        self.assertEqual(event['event_type'], 'display_state')
+
 
 if __name__ == '__main__':
     unittest.main()

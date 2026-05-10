@@ -44,7 +44,7 @@ run_capture host_journal_anthias_dev sh -c "journalctl -u anthias-dev --no-pager
 run_capture compose_ps docker compose "${COMPOSE_ARGS[@]}" ps
 run_capture compose_server_logs docker compose "${COMPOSE_ARGS[@]}" logs --tail 200 anthias-server
 run_capture compose_viewer_logs docker compose "${COMPOSE_ARGS[@]}" logs --tail 400 anthias-viewer
-run_capture redis_render_probe_state docker compose "${COMPOSE_ARGS[@]}" exec -T redis sh -c "redis-cli GET viewer.render.last_command; echo ---; redis-cli GET viewer.render.last_result; echo ---; redis-cli LRANGE viewer.render.history 0 20"
+run_capture redis_render_probe_state docker compose "${COMPOSE_ARGS[@]}" exec -T redis sh -c "redis-cli GET viewer.render.last_command; echo ---; redis-cli GET viewer.render.last_result; echo ---; redis-cli LRANGE viewer.render.history 0 20; echo ---; redis-cli GET viewer.display.state; echo ---; redis-cli GET viewer.display.heartbeat"
 
 run_capture viewer_id docker exec "$VIEWER_CONTAINER" id
 run_capture viewer_processes docker exec "$VIEWER_CONTAINER" ps aux

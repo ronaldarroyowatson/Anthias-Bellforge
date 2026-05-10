@@ -363,7 +363,7 @@ class TestViewerNavigationIdempotency(ViewerTestCase):
         browser_bus_mock = mock.Mock()
         self.u.browser_bus = browser_bus_mock
 
-        expected_url = 'http://example.local/splash-page'
+        expected_url = 'http://example.local/dashboard'
         self.u.current_browser_url = ''.join(expected_url)
         new_uri_instance = ''.join([c for c in expected_url])
 
@@ -375,6 +375,33 @@ class TestViewerNavigationIdempotency(ViewerTestCase):
             self.u.current_browser_url = original_current_browser_url
 
         browser_bus_mock.loadPage.assert_not_called()
+
+    def test_view_webpage_reloads_splash_page_even_if_url_matches(
+        self,
+    ) -> None:
+        original_browser = self.u.browser
+        original_browser_bus = self.u.browser_bus
+        original_current_browser_url = self.u.current_browser_url
+
+        browser_mock = mock.Mock()
+        browser_mock.is_alive.return_value = True
+
+        self.u.browser = browser_mock
+        browser_bus_mock = mock.Mock()
+        self.u.browser_bus = browser_bus_mock
+
+        expected_url = 'http://anthias-server:8080/splash-page'
+        self.u.current_browser_url = ''.join(expected_url)
+        new_uri_instance = ''.join([c for c in expected_url])
+
+        try:
+            self.u.view_webpage(new_uri_instance)
+        finally:
+            self.u.browser = original_browser
+            self.u.browser_bus = original_browser_bus
+            self.u.current_browser_url = original_current_browser_url
+
+        browser_bus_mock.loadPage.assert_called_once_with(new_uri_instance)
 
     def test_view_image_does_not_reload_same_url_value(self) -> None:
         original_browser = self.u.browser
@@ -670,6 +697,9 @@ class TestRenderProbeTelemetry(ViewerTestCase):
             mock.patch.object(
                 self.u, 'record_render_result'
             ) as m_record_result,
+            mock.patch.object(
+                self.u, 'record_display_state'
+            ) as m_record_display_state,
         ):
             try:
                 self.u.view_webpage('http://example.local/page')
@@ -684,6 +714,12 @@ class TestRenderProbeTelemetry(ViewerTestCase):
             media_type='webpage',
             uri='http://example.local/page',
             status='success',
+        )
+        m_record_display_state.assert_called_once_with(
+            self.u.r,
+            media_type='webpage',
+            uri='http://example.local/page',
+            render_status='success',
         )
 
     def test_view_image_records_noop_when_url_is_already_current(self) -> None:
@@ -706,6 +742,9 @@ class TestRenderProbeTelemetry(ViewerTestCase):
             mock.patch.object(
                 self.u, 'record_render_result'
             ) as m_record_result,
+            mock.patch.object(
+                self.u, 'record_display_state'
+            ) as m_record_display_state,
         ):
             try:
                 self.u.view_image('http://example.local/static/img/a.png')
@@ -720,6 +759,12 @@ class TestRenderProbeTelemetry(ViewerTestCase):
             media_type='image',
             uri='http://example.local/static/img/a.png',
             status='noop_already_current',
+        )
+        m_record_display_state.assert_called_once_with(
+            self.u.r,
+            media_type='image',
+            uri='http://example.local/static/img/a.png',
+            render_status='noop_already_current',
         )
 
     def test_view_video_records_failure_when_player_raises(self) -> None:

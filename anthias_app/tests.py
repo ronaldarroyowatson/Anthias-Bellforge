@@ -226,3 +226,136 @@ class SplashPageViewTest(TestCase):
 
         self.assertContains(response, 'http://localhost:8000')
         self.assertNotContains(response, 'http://anthias.local')
+
+    def test_splash_page_ignores_container_host_in_development(self) -> None:
+        request = self.factory.get(
+            '/splash-page', HTTP_HOST='anthias-server:8080'
+        )
+
+        with (
+            mock.patch.dict('os.environ', {'ENVIRONMENT': 'development'}),
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='Unable to retrieve IP.',
+            ),
+            mock.patch.object(
+                views,
+                'get_node_hostname',
+                return_value='',
+            ),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://anthias.local')
+        self.assertNotContains(response, 'http://anthias-server:8080')
+
+
+class SplashPageReachabilityTest(TestCase):
+    """Fail-first tests for per-URL reachability filtering on the splash page."""
+
+    def setUp(self) -> None:
+        self.factory = RequestFactory()
+
+    def test_splash_excludes_unreachable_url_when_reachable_one_exists(
+        self,
+    ) -> None:
+        # Fail-first: without the reachability filter both IPs would be shown.
+        # With the filter, only the reachable IP must appear.
+        request = self.factory.get('/splash-page')
+
+        def _reachable_only_first(url: str, timeout: float = 2.0) -> bool:
+            return url == 'http://192.168.1.20'
+
+        with (
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='192.168.1.20 192.168.1.99',
+            ),
+            mock.patch.object(
+                views,
+                'probe_management_server',
+                side_effect=_reachable_only_first,
+            ),
+            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://192.168.1.20')
+        self.assertNotContains(response, 'http://192.168.1.99')
+
+    def test_splash_shows_all_urls_when_none_are_reachable(self) -> None:
+        # When every probe fails the view must fall back to showing all
+        # candidates so the user is not left with a blank page.
+        request = self.factory.get('/splash-page')
+
+        with (
+            mock.patch.object(
+                views,
+                'get_node_ip',
+                return_value='192.168.1.20 192.168.1.99',
+            ),
+            mock.patch.object(
+                views,
+                'probe_management_server',
+                return_value=False,
+            ),
+            mock.patch.object(views, 'is_internet_reachable', return_value=False),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://192.168.1.20')
+        self.assertContains(response, 'http://192.168.1.99')
+
+    def test_splash_includes_internet_connected_status(self) -> None:
+        request = self.factory.get('/splash-page')
+
+        with (
+            mock.patch.object(
+                views, 'get_node_ip', return_value='192.168.1.20'
+            ),
+            mock.patch.object(
+                views, 'probe_management_server', return_value=True
+            ),
+            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'Internet: Connected')
+
+    def test_splash_includes_internet_offline_status(self) -> None:
+        request = self.factory.get('/splash-page')
+
+        with (
+            mock.patch.object(
+                views, 'get_node_ip', return_value='192.168.1.20'
+            ),
+            mock.patch.object(
+                views, 'probe_management_server', return_value=True
+            ),
+            mock.patch.object(views, 'is_internet_reachable', return_value=False),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'No internet connection')
+
+    def test_splash_appends_management_port_when_not_80(self) -> None:
+        # When MANAGEMENT_PORT is set to a non-standard port, the splash
+        # page must include it in the advertised URL so the link works.
+        request = self.factory.get('/splash-page')
+
+        with (
+            mock.patch.dict('os.environ', {'MANAGEMENT_PORT': '8000'}),
+            mock.patch.object(
+                views, 'get_node_ip', return_value='192.168.1.20'
+            ),
+            mock.patch.object(
+                views, 'probe_management_server', return_value=True
+            ),
+            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+        ):
+            response = views.splash_page(request)
+
+        self.assertContains(response, 'http://192.168.1.20:8000')
+        self.assertNotContains(response, 'http://192.168.1.20/')  # no bare port-80

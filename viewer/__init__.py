@@ -49,6 +49,7 @@ from lib.utils import (  # noqa: E402
 )
 from viewer.messaging import ViewerSubscriber  # noqa: E402
 from viewer.render_probe import (
+    record_display_state,  # noqa: E402
     record_render_command,  # noqa: E402
     record_render_result,  # noqa: E402
 )
@@ -481,6 +482,10 @@ def load_browser() -> None:
     )
 
 
+def _should_force_webpage_refresh(uri: str) -> bool:
+    return uri.endswith('/splash-page')
+
+
 def view_webpage(uri: str) -> None:
     global current_browser_url, browser_bus
 
@@ -498,7 +503,9 @@ def view_webpage(uri: str) -> None:
 
     _ensure_browser_bus_ready()
 
-    if current_browser_url != uri:
+    should_refresh = _should_force_webpage_refresh(uri)
+
+    if current_browser_url != uri or should_refresh:
         try:
             browser_bus.loadPage(uri)
         except Exception:
@@ -517,13 +524,26 @@ def view_webpage(uri: str) -> None:
                     status='error',
                     detail=str(exc),
                 )
+                record_display_state(
+                    r,
+                    media_type='webpage',
+                    uri=uri,
+                    render_status='error',
+                    detail=str(exc),
+                )
                 raise
         current_browser_url = uri
         record_render_result(
             r,
             media_type='webpage',
             uri=uri,
-            status='success',
+            status='success_refreshed' if should_refresh else 'success',
+        )
+        record_display_state(
+            r,
+            media_type='webpage',
+            uri=uri,
+            render_status='success_refreshed' if should_refresh else 'success',
         )
     else:
         record_render_result(
@@ -531,6 +551,12 @@ def view_webpage(uri: str) -> None:
             media_type='webpage',
             uri=uri,
             status='noop_already_current',
+        )
+        record_display_state(
+            r,
+            media_type='webpage',
+            uri=uri,
+            render_status='noop_already_current',
         )
     if _display_debug_enabled():
         _drain_browser_stdout()
@@ -573,6 +599,13 @@ def view_image(uri: str) -> None:
                     status='error',
                     detail=str(exc),
                 )
+                record_display_state(
+                    r,
+                    media_type='image',
+                    uri=uri,
+                    render_status='error',
+                    detail=str(exc),
+                )
                 raise
         current_browser_url = uri
         record_render_result(
@@ -581,12 +614,24 @@ def view_image(uri: str) -> None:
             uri=uri,
             status='success',
         )
+        record_display_state(
+            r,
+            media_type='image',
+            uri=uri,
+            render_status='success',
+        )
     else:
         record_render_result(
             r,
             media_type='image',
             uri=uri,
             status='noop_already_current',
+        )
+        record_display_state(
+            r,
+            media_type='image',
+            uri=uri,
+            render_status='noop_already_current',
         )
     if _display_debug_enabled():
         _drain_browser_stdout()
@@ -626,6 +671,12 @@ def view_video(uri: str, duration: int | str) -> None:
             uri=uri,
             status='success',
         )
+        record_display_state(
+            r,
+            media_type='video',
+            uri=uri,
+            render_status='success',
+        )
     except sh.ErrorReturnCode_1:
         logging.info(
             'Resource URI is not correct, remote host is not responding or '
@@ -638,12 +689,26 @@ def view_video(uri: str, duration: int | str) -> None:
             status='error',
             detail='sh.ErrorReturnCode_1',
         )
+        record_display_state(
+            r,
+            media_type='video',
+            uri=uri,
+            render_status='error',
+            detail='sh.ErrorReturnCode_1',
+        )
     except Exception as exc:
         record_render_result(
             r,
             media_type='video',
             uri=uri,
             status='error',
+            detail=str(exc),
+        )
+        record_display_state(
+            r,
+            media_type='video',
+            uri=uri,
+            render_status='error',
             detail=str(exc),
         )
         raise

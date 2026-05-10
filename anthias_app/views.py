@@ -12,6 +12,8 @@ from lib.utils import (
     connect_to_redis,
     get_node_hostname,
     get_node_ip,
+    is_internet_reachable,
+    probe_management_server,
 )
 from settings import settings
 
@@ -20,6 +22,22 @@ from .helpers import (
 )
 
 r = connect_to_redis()
+
+
+def _is_container_internal_host(host: str) -> bool:
+    hostname = host.split(':', 1)[0].strip().strip('[]').lower()
+    if not hostname:
+        return True
+
+    return hostname in {
+        'anthias-server',
+        'anthias-viewer',
+        'anthias-celery',
+        'redis',
+        '127.0.0.1',
+        '0.0.0.0',
+        '::1',
+    }
 
 
 @authorized
@@ -57,7 +75,19 @@ def login(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(['GET'])
 def splash_page(request: HttpRequest) -> HttpResponse:
-    ip_addresses = []
+    # MANAGEMENT_PORT lets the dev compose override the default HTTP port
+    # so advertised URLs include the non-standard port (e.g. :8000).
+    try:
+        management_port = int(os.getenv('MANAGEMENT_PORT', '80').strip())
+    except ValueError:
+        management_port = 80
+
+    def _build_url(ip: str) -> str:
+        if management_port == 80:
+            return f'http://{ip}'
+        return f'http://{ip}:{management_port}'
+
+    ip_candidates: list[str] = []
 
     for ip_address in get_node_ip().split():
         try:
@@ -69,29 +99,43 @@ def splash_page(request: HttpRequest) -> HttpResponse:
             continue
 
         if isinstance(ip_address_object, ipaddress.IPv6Address):
-            ip_addresses.append(f'http://[{ip_address}]')
+            port_suffix = '' if management_port == 80 else f':{management_port}'
+            ip_candidates.append(f'http://[{ip_address}]{port_suffix}')
         else:
-            ip_addresses.append(f'http://{ip_address}')
+            ip_candidates.append(_build_url(ip_address))
 
-    if not ip_addresses:
+    if not ip_candidates:
         hostname = get_node_hostname().strip().lower()
         if hostname and hostname != 'anthias':
-            ip_addresses.append(f'http://{hostname}.local')
+            ip_candidates.append(f'http://{hostname}.local')
         elif os.getenv('ENVIRONMENT') == 'development':
             host = request.get_host().strip()
-            if host and host != 'testserver':
+            if (
+                host
+                and host != 'testserver'
+                and not _is_container_internal_host(host)
+            ):
                 scheme = 'https' if request.is_secure() else 'http'
-                ip_addresses.append(f'{scheme}://{host}')
+                ip_candidates.append(f'{scheme}://{host}')
             else:
-                ip_addresses.append('http://anthias.local')
+                ip_candidates.append('http://anthias.local')
         else:
-            ip_addresses.append('http://anthias.local')
+            ip_candidates.append('http://anthias.local')
+
+    # Only advertise URLs the server can actually answer on. If every probe
+    # fails (e.g. offline test environment) fall back to showing all
+    # candidates so users are never left with a blank splash page.
+    reachable = [url for url in ip_candidates if probe_management_server(url)]
+    ip_addresses = reachable if reachable else ip_candidates
+
+    internet_reachable = is_internet_reachable()
 
     return template(
         request,
         'splash-page.html',
         {
             'ip_addresses': ip_addresses,
+            'internet_reachable': internet_reachable,
             'splash_logo_url': settings['splash_logo_url'],
         },
     )

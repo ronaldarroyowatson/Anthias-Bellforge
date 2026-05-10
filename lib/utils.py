@@ -445,6 +445,55 @@ def url_fails(url: str) -> bool:
     return True
 
 
+def probe_management_server(url: str, timeout: float = 2.0) -> bool:
+    """
+    Returns True when the management server is listening at the given base URL.
+
+    Any HTTP response (including 3xx / 4xx) confirms the server is up.
+    Only a network-level failure (connection refused, timeout, DNS error)
+    returns False. The short default timeout keeps splash page rendering
+    responsive even when a candidate IP is unreachable.
+    """
+    probe_url = url.rstrip('/') + '/'
+    try:
+        response = requests.get(
+            probe_url,
+            allow_redirects=False,
+            timeout=timeout,
+            headers={'User-Agent': 'Anthias-ReachabilityProbe/1.0'},
+        )
+        # Any HTTP status < 500 means a server is answering on this address.
+        return response.status_code < 500
+    except (
+        requests.ConnectionError,
+        requests.exceptions.Timeout,
+        requests.exceptions.RequestException,
+    ):
+        return False
+
+
+def is_internet_reachable(timeout: float = 3.0) -> bool:
+    """
+    Returns True when the device has a working path to the public internet.
+
+    Uses Google's generate_204 endpoint, which returns HTTP 204 with no body
+    and is designed specifically for connectivity probing.
+    """
+    try:
+        response = requests.get(
+            'https://clients3.google.com/generate_204',
+            timeout=timeout,
+            headers={'User-Agent': 'Anthias-ReachabilityProbe/1.0'},
+        )
+        return response.status_code == 204
+    except (
+        requests.ConnectionError,
+        requests.exceptions.Timeout,
+        requests.exceptions.RequestException,
+    ):
+        return False
+
+
 def download_video_from_youtube(
     uri: str,
     asset_id: str,

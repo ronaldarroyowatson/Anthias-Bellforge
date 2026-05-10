@@ -57,6 +57,13 @@
                 {% else %}
                     <p>Unable to retrieve IP.</p>
                 {% endif %}
+                    <div class="text-center mt-3">
+                        {% if internet_reachable %}
+                            <small class="text-success">Internet: Connected</small>
+                        {% else %}
+                            <small class="text-warning">No internet connection</small>
+                        {% endif %}
+                    </div>
             </div>
         </div>
     </div>

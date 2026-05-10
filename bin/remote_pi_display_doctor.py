@@ -12,6 +12,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+DISPLAY_STATE_STALE_THRESHOLD_SECONDS = 20
+
 
 def _now_utc() -> str:
     return datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')
@@ -162,6 +164,15 @@ def _remote_compose_up_script(repo_dir: str, rebuild: bool) -> str:
     build_arg = '--build' if rebuild else ''
     return (
         f'cd {shlex.quote(repo_dir)}; '
+        'MY_IP="${MY_IP:-}"; '
+        'if [ -z "$MY_IP" ]; then '
+        'MY_IP="$(hostname -I | awk "{print \\$1}")"; '
+        'fi; '
+        'if [ -z "$MY_IP" ]; then '
+        'MY_IP="$(ip route get 1.1.1.1 2>/dev/null | awk "{print \\$7; exit}")"; '
+        'fi; '
+        'export MY_IP; '
+        'echo "Using MY_IP=${MY_IP:-unset}"; '
         f'docker compose {compose_files} up -d {build_arg}; '
         f'docker compose {compose_files} ps'
     )
@@ -252,6 +263,84 @@ def _resolve_remote_repo_dir(
         )
 
     return result.stdout.strip()
+
+
+def _extract_render_probe_blocks(snapshot_output: str) -> list[str]:
+    return [block.strip() for block in snapshot_output.split('---')]
+
+
+def _evaluate_display_health(snapshot_output: str) -> dict[str, object]:
+    now_utc = datetime.now(UTC)
+    blocks = _extract_render_probe_blocks(snapshot_output)
+
+    if len(blocks) < 4:
+        return {
+            'ok': False,
+            'reason': 'render_probe_snapshot missing display-state blocks',
+        }
+
+    display_state_raw = blocks[3]
+    heartbeat_raw = blocks[4] if len(blocks) > 4 else ''
+
+    if not display_state_raw:
+        return {'ok': False, 'reason': 'viewer.display.state key missing'}
+
+    try:
+        display_state = json.loads(display_state_raw)
+    except json.JSONDecodeError:
+        return {
+            'ok': False,
+            'reason': 'viewer.display.state is not valid JSON',
+            'raw': display_state_raw,
+        }
+
+    timestamp_text = str(display_state.get('timestamp', '')).strip()
+    render_status = str(display_state.get('render_status', '')).strip()
+
+    if not timestamp_text:
+        return {
+            'ok': False,
+            'reason': 'viewer.display.state missing timestamp',
+            'state': display_state,
+        }
+
+    try:
+        state_timestamp = datetime.fromisoformat(
+            timestamp_text.replace('Z', '+00:00')
+        )
+    except ValueError:
+        return {
+            'ok': False,
+            'reason': 'viewer.display.state timestamp is invalid',
+            'state': display_state,
+        }
+
+    age_seconds = (now_utc - state_timestamp).total_seconds()
+    if age_seconds > DISPLAY_STATE_STALE_THRESHOLD_SECONDS:
+        return {
+            'ok': False,
+            'reason': 'viewer.display.state is stale',
+            'age_seconds': round(age_seconds, 3),
+            'state': display_state,
+            'heartbeat': heartbeat_raw,
+        }
+
+    if render_status == 'error':
+        return {
+            'ok': False,
+            'reason': 'viewer.display.state reports render error',
+            'age_seconds': round(age_seconds, 3),
+            'state': display_state,
+            'heartbeat': heartbeat_raw,
+        }
+
+    return {
+        'ok': True,
+        'reason': 'display state fresh and non-error',
+        'age_seconds': round(age_seconds, 3),
+        'state': display_state,
+        'heartbeat': heartbeat_raw,
+    }
 
 
 def main() -> int:
@@ -461,17 +550,27 @@ def main() -> int:
                 'docker compose -f docker-compose.dev.yml -f docker-compose.viewer.yml '
                 'exec -T redis sh -c "redis-cli GET viewer.render.last_command; '
                 'echo ---; redis-cli GET viewer.render.last_result; '
-                'echo ---; redis-cli LRANGE viewer.render.history 0 30"'
+                'echo ---; redis-cli LRANGE viewer.render.history 0 30; '
+                'echo ---; redis-cli GET viewer.display.state; '
+                'echo ---; redis-cli GET viewer.display.heartbeat"'
             ),
             check=False,
         )
+
+        render_probe_snapshot_path = (
+            local_output_dir / 'render_probe_snapshot.stdout.log'
+        )
+        display_health = _evaluate_display_health(
+            render_probe_snapshot_path.read_text(encoding='utf-8')
+        )
+        summary['display_health'] = display_health
 
         if not args.skip_bundle:
             remote_bundle_dir = f'/tmp/anthias-display-debug-{run_id}'
             run_step(
                 'collect_bundle',
                 f'cd {shlex.quote(remote_repo_dir)}; '
-                f'./bin/collect_display_debug_bundle.sh {shlex.quote(remote_bundle_dir)}',
+                f'bash ./bin/collect_display_debug_bundle.sh {shlex.quote(remote_bundle_dir)}',
                 check=False,
             )
             remote_bundle_tar = f'{remote_bundle_dir}.tar.gz'
