@@ -278,7 +278,9 @@ class SplashPageReachabilityTest(TestCase):
                 'probe_management_server',
                 side_effect=_reachable_only_first,
             ),
-            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+            mock.patch.object(
+                views, 'is_internet_reachable', return_value=True
+            ),
         ):
             response = views.splash_page(request)
 
@@ -301,7 +303,9 @@ class SplashPageReachabilityTest(TestCase):
                 'probe_management_server',
                 return_value=False,
             ),
-            mock.patch.object(views, 'is_internet_reachable', return_value=False),
+            mock.patch.object(
+                views, 'is_internet_reachable', return_value=False
+            ),
         ):
             response = views.splash_page(request)
 
@@ -318,7 +322,9 @@ class SplashPageReachabilityTest(TestCase):
             mock.patch.object(
                 views, 'probe_management_server', return_value=True
             ),
-            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+            mock.patch.object(
+                views, 'is_internet_reachable', return_value=True
+            ),
         ):
             response = views.splash_page(request)
 
@@ -334,7 +340,9 @@ class SplashPageReachabilityTest(TestCase):
             mock.patch.object(
                 views, 'probe_management_server', return_value=True
             ),
-            mock.patch.object(views, 'is_internet_reachable', return_value=False),
+            mock.patch.object(
+                views, 'is_internet_reachable', return_value=False
+            ),
         ):
             response = views.splash_page(request)
 
@@ -353,9 +361,13 @@ class SplashPageReachabilityTest(TestCase):
             mock.patch.object(
                 views, 'probe_management_server', return_value=True
             ),
-            mock.patch.object(views, 'is_internet_reachable', return_value=True),
+            mock.patch.object(
+                views, 'is_internet_reachable', return_value=True
+            ),
         ):
             response = views.splash_page(request)
 
         self.assertContains(response, 'http://192.168.1.20:8000')
-        self.assertNotContains(response, 'http://192.168.1.20/')  # no bare port-80
+        self.assertNotContains(
+            response, 'http://192.168.1.20/'
+        )  # no bare port-80

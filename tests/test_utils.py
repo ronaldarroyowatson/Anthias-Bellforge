@@ -82,14 +82,18 @@ class ManagementReachabilityProbeTest(TestCase):
                 ('192.168.2.180', 8000), timeout=2.0
             )
 
-    def test_probe_management_server_returns_false_when_unreachable(self) -> None:
+    def test_probe_management_server_returns_false_when_unreachable(
+        self,
+    ) -> None:
         with patch('lib.utils.socket.create_connection') as mock_connection:
             mock_connection.side_effect = OSError('connection refused')
             self.assertFalse(
                 probe_management_server('http://192.168.2.250:8000')
             )
 
-    def test_probe_management_server_returns_false_for_invalid_url(self) -> None:
+    def test_probe_management_server_returns_false_for_invalid_url(
+        self,
+    ) -> None:
         self.assertFalse(probe_management_server('not-a-url'))
 
 

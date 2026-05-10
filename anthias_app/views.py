@@ -99,7 +99,9 @@ def splash_page(request: HttpRequest) -> HttpResponse:
             continue
 
         if isinstance(ip_address_object, ipaddress.IPv6Address):
-            port_suffix = '' if management_port == 80 else f':{management_port}'
+            port_suffix = (
+                '' if management_port == 80 else f':{management_port}'
+            )
             ip_candidates.append(f'http://[{ip_address}]{port_suffix}')
         else:
             ip_candidates.append(_build_url(ip_address))
