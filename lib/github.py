@@ -327,6 +327,12 @@ def is_up_to_date() -> bool:
         return True
 
     device_type = os.getenv('DEVICE_TYPE')
-    return (
-        is_running_latest_published_image(git_short_hash, device_type) is True
+    published_image_match = is_running_latest_published_image(
+        git_short_hash, device_type
     )
+
+    # Only show the update banner when we can positively prove a newer
+    # release is available. If GHCR lookup is inconclusive, hide the banner
+    # instead of advertising an update that may not exist or may already
+    # have been applied.
+    return published_image_match is not False

@@ -114,8 +114,8 @@ class UpdateTest(ParametrizedTestCase):
                 False,
             ),
             # Master is ahead and GHCR lookup failed (None) â†’ fail open
-            # to "not up to date" so the banner shows rather than the
-            # device sitting silently on a stale image.
+            # to "up to date" so the banner stays hidden unless we can
+            # prove a newer release is actually available.
             (
                 {
                     'latest_remote_hash': GIT_HASH_2,
@@ -123,7 +123,7 @@ class UpdateTest(ParametrizedTestCase):
                     'git_short_hash': GIT_SHORT_HASH_1,
                     'is_running_latest_published_image': None,
                 },
-                False,
+                True,
             ),
         ],
     )

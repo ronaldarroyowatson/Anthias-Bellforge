@@ -1,14 +1,64 @@
 ---
+- name: Read existing /etc/timezone if present
+  ansible.builtin.slurp:
+    path: /etc/timezone
+  register: system_timezone_file
+  failed_when: false
+
+- name: Look up timezone from public IP
+  ansible.builtin.uri:
+    url: https://worldtimeapi.org/api/ip
+    return_content: true
+    timeout: 5
+  register: system_timezone_lookup
+  failed_when: false
+  changed_when: false
+
+- name: Choose timezone to apply
+  ansible.builtin.set_fact:
+    system_detected_timezone: >-
+      {{
+        lookup('env', 'ANTHIAS_TIME_ZONE')
+        | default('', true)
+        | trim
+        if (lookup('env', 'ANTHIAS_TIME_ZONE') | default('', true) | trim) != ''
+        else (
+          system_timezone_lookup.json.timezone
+          | default('', true)
+          | trim
+          if (system_timezone_lookup is not failed and system_timezone_lookup.json is defined)
+          else ''
+        )
+      }}
+
+- name: Apply detected timezone
+  ansible.builtin.command: timedatectl set-timezone "{{ system_detected_timezone }}"
+  when: system_detected_timezone != ''
+  changed_when: true
+
 - name: Check if /etc/timezone exists
   ansible.builtin.stat:
     path: /etc/timezone
   register: system_etc_timezone
 
+- name: Populate /etc/timezone from detected timezone
+  ansible.builtin.copy:
+    content: "{{ system_detected_timezone }}\n"
+    dest: /etc/timezone
+    owner: root
+    group: root
+    mode: "0644"  # NOSONAR
+  when:
+    - system_detected_timezone != ''
+    - not system_etc_timezone.stat.exists or (system_timezone_file.content | default('') | b64decode | trim) != system_detected_timezone
+
 - name: Resolve /etc/localtime symlink
   ansible.builtin.command: readlink -f /etc/localtime
   register: system_localtime_link
   changed_when: false
-  when: not system_etc_timezone.stat.exists
+  when:
+    - system_detected_timezone == ''
+    - not system_etc_timezone.stat.exists
 
 - name: Create /etc/timezone from /etc/localtime
   ansible.builtin.copy:
@@ -19,4 +69,6 @@
     # /etc/timezone ships 0644 on Debian; many libc/locale paths expect
     # it to be world-readable.
     mode: "0644"  # NOSONAR
-  when: not system_etc_timezone.stat.exists
+  when:
+    - system_detected_timezone == ''
+    - not system_etc_timezone.stat.exists
