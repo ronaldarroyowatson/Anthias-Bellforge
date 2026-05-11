@@ -414,3 +414,24 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - ansible/roles/system/tasks/timezone.yml
   - bin/start_viewer.sh
 - Status: fixed in code; pending user visual confirmation after reboot/start.
+
+## 2026-05-11
+
+### ISSUE-027: Startup splash needed setup-aware hold timing
+- Symptoms:
+  - when assets were configured, startup could transition too quickly for users to note management URL guidance.
+  - operators requested a "first setup stays visible, post-setup short reminder" behavior.
+- Impact:
+  - first-time onboarding and post-setup boot experience used the same timing model, which did not fit both scenarios.
+- Debug evidence:
+  - startup hold logic was not aware of whether playlist content already existed.
+- Fix:
+  - add setup-aware startup hold logic in viewer startup.
+  - if scheduler starts with no assets, skip timed startup hold and let empty-playlist loop keep splash visible.
+  - if assets exist, apply configurable short startup hold via `STARTUP_SPLASH_MIN_SECONDS` (default 15s).
+  - add tests for env parsing, post-setup hold, and empty-playlist hold skip behavior.
+- Files:
+  - viewer/__init__.py
+  - tests/test_viewer.py
+  - docs/display-pipeline-fix-log.md
+- Status: fixed in code, pending Linux runtime verification.

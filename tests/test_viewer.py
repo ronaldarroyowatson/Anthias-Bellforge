@@ -459,6 +459,113 @@ class TestViewerNavigationIdempotency(ViewerTestCase):
 
 
 class TestStartupCommsDiagnostics(ViewerTestCase):
+    def test_get_startup_splash_min_seconds_uses_default_on_invalid_env(
+        self,
+    ) -> None:
+        with mock.patch.object(self.u, 'getenv', return_value='not-a-number'):
+            min_seconds = self.u._get_startup_splash_min_seconds()
+
+        self.assertEqual(
+            min_seconds,
+            self.u.STARTUP_SPLASH_MIN_SECONDS_DEFAULT,
+        )
+
+    def test_get_startup_splash_min_seconds_clamps_negative_to_zero(
+        self,
+    ) -> None:
+        with mock.patch.object(self.u, 'getenv', return_value='-10'):
+            min_seconds = self.u._get_startup_splash_min_seconds()
+
+        self.assertEqual(min_seconds, 0.0)
+
+    def test_main_applies_minimum_startup_splash_hold_when_disabled(
+        self,
+    ) -> None:
+        m_subscriber_instance = mock.Mock(name='subscriber_instance')
+        m_subscriber = mock.Mock(return_value=m_subscriber_instance)
+
+        with (
+            mock.patch.object(self.u, '_setup_with_retries', side_effect=noop),
+            mock.patch.object(self.u, 'ViewerSubscriber', m_subscriber),
+            mock.patch.object(
+                self.u, '_wait_for_subscriber_ready', return_value=True
+            ),
+            mock.patch.object(self.u, 'wait_for_server', return_value=True),
+            mock.patch.object(
+                self.u,
+                '_show_splash_with_fallback',
+                return_value=True,
+            ),
+            mock.patch.object(self.u, 'Scheduler', return_value=mock.Mock()),
+            mock.patch.object(self.u, 'start_loop', side_effect=noop),
+            mock.patch.object(self.u, 'sleep', side_effect=noop) as m_sleep,
+            mock.patch.object(self.u, 'is_balena_app', return_value=False),
+            mock.patch.object(
+                self.u,
+                '_log_startup_timeline_event',
+                side_effect=noop,
+            ),
+            mock.patch.object(
+                self.u,
+                '_get_startup_splash_min_seconds',
+                return_value=7.0,
+            ),
+        ):
+            original_show_splash = self.u.settings['show_splash']
+            self.u.settings['show_splash'] = False
+            try:
+                self.u.main()
+            finally:
+                self.u.settings['show_splash'] = original_show_splash
+
+        m_sleep.assert_called_once_with(7.0)
+
+    def test_main_skips_startup_hold_when_playlist_is_empty(
+        self,
+    ) -> None:
+        m_subscriber_instance = mock.Mock(name='subscriber_instance')
+        m_subscriber = mock.Mock(return_value=m_subscriber_instance)
+        empty_scheduler = mock.Mock()
+        empty_scheduler.assets = []
+
+        with (
+            mock.patch.object(self.u, '_setup_with_retries', side_effect=noop),
+            mock.patch.object(self.u, 'ViewerSubscriber', m_subscriber),
+            mock.patch.object(
+                self.u, '_wait_for_subscriber_ready', return_value=True
+            ),
+            mock.patch.object(self.u, 'wait_for_server', return_value=True),
+            mock.patch.object(
+                self.u,
+                '_show_splash_with_fallback',
+                return_value=True,
+            ),
+            mock.patch.object(
+                self.u, 'Scheduler', return_value=empty_scheduler
+            ),
+            mock.patch.object(self.u, 'start_loop', side_effect=noop),
+            mock.patch.object(self.u, 'sleep', side_effect=noop) as m_sleep,
+            mock.patch.object(self.u, 'is_balena_app', return_value=False),
+            mock.patch.object(
+                self.u,
+                '_log_startup_timeline_event',
+                side_effect=noop,
+            ),
+            mock.patch.object(
+                self.u,
+                '_get_startup_splash_min_seconds',
+                return_value=15.0,
+            ),
+        ):
+            original_show_splash = self.u.settings['show_splash']
+            self.u.settings['show_splash'] = False
+            try:
+                self.u.main()
+            finally:
+                self.u.settings['show_splash'] = original_show_splash
+
+        m_sleep.assert_not_called()
+
     def test_wait_for_subscriber_ready_returns_true_when_flag_present(
         self,
     ) -> None:

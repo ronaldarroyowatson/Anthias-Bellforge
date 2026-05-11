@@ -122,10 +122,31 @@ SUBSCRIBER_READY_WAIT_TIMEOUT_SECONDS = 5
 SUBSCRIBER_READY_POLL_INTERVAL_SECONDS = 0.2
 SETUP_RETRY_ATTEMPTS = 5
 SETUP_RETRY_DELAY_SECONDS = 2
+STARTUP_SPLASH_MIN_SECONDS_DEFAULT = 15.0
 
 
 def _display_debug_enabled() -> bool:
     return string_to_bool(getenv('VIEWER_DISPLAY_DEBUG', '0'))
+
+
+def _get_startup_splash_min_seconds() -> float:
+    raw_value = getenv(
+        'STARTUP_SPLASH_MIN_SECONDS',
+        str(STARTUP_SPLASH_MIN_SECONDS_DEFAULT),
+    )
+
+    try:
+        parsed_value = float(raw_value)
+    except (TypeError, ValueError):
+        logging.warning(
+            'viewer startup: invalid STARTUP_SPLASH_MIN_SECONDS=%r; '
+            'using default %.1fs',
+            raw_value,
+            STARTUP_SPLASH_MIN_SECONDS_DEFAULT,
+        )
+        return STARTUP_SPLASH_MIN_SECONDS_DEFAULT
+
+    return max(parsed_value, 0.0)
 
 
 def _drm_connector_snapshot() -> list[str]:
@@ -895,10 +916,25 @@ def main() -> None:
                     get_balena_device_info()
 
         _show_splash_with_fallback()
-        sleep(SPLASH_DELAY)
+
+    has_startup_assets = bool(scheduler.assets)
+    if has_startup_assets:
+        startup_splash_hold_seconds = _get_startup_splash_min_seconds()
+    else:
+        startup_splash_hold_seconds = 0.0
         _log_startup_timeline_event(
             startup_started_at,
-            'show-splash-delay-complete',
+            'startup-splash-hold-skipped-empty-playlist',
+        )
+
+    if startup_splash_hold_seconds > 0:
+        sleep(startup_splash_hold_seconds)
+        _log_startup_timeline_event(
+            startup_started_at,
+            (
+                'startup-splash-hold-complete '
+                f'seconds={startup_splash_hold_seconds:.1f}'
+            ),
         )
 
     # Historically we switched to a very dark standby image here, which can
