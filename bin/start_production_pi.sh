@@ -18,6 +18,15 @@ envsubst < docker-compose.yml.tmpl > /tmp/docker-compose.prod.yml
 echo "==> Removing /dev/vchiq entries (Pi5 does not need them)..."
 sed -i '/- "\/dev\/vchiq:\/dev\/vchiq"/d' /tmp/docker-compose.prod.yml
 sed -i '/- \/dev\/vchiq:\/dev\/vchiq/d' /tmp/docker-compose.prod.yml
+# Remove bare 'devices:' keys left after all entries are stripped (invalid compose syntax)
+python3 - <<'PYEOF'
+import re, pathlib
+p = pathlib.Path('/tmp/docker-compose.prod.yml')
+text = p.read_text()
+# Remove a 'devices:' line that is immediately followed by another key or end-of-block
+text = re.sub(r'    devices:\n(?=    [a-z]|\n)', '', text)
+p.write_text(text)
+PYEOF
 
 echo "==> Fixing staticfiles path..."
 sed -i 's|/home/pi/anthias/staticfiles|/home/pi/Anthias-Bellforge/staticfiles|g' /tmp/docker-compose.prod.yml
