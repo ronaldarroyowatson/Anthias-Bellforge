@@ -431,6 +431,7 @@ def _show_splash_with_fallback(server_is_ready: bool | None = None) -> bool:
         )
         # Settle: give the webview time to actually paint before we return.
         sleep(SPLASH_POST_RENDER_SETTLE_SECONDS)
+        return True
     except Exception:
         elapsed = monotonic() - splash_start
         logging.exception(
