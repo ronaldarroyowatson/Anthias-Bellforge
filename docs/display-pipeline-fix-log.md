@@ -219,6 +219,25 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - bin/collect_display_debug_bundle.sh
 - Status: fixed in automation and validated in autonomous reruns.
 
+## 2026-05-11
+
+### ISSUE-020: Production boot/update path still targeted upstream Anthias checkout instead of Bellforge repo
+- Symptoms: Pi showed a Screenly-branded splash page after reboot even though the Bellforge repo, splash template, and runtime config in the active workspace were already Bellforge-branded.
+- Impact: deployed devices could boot a stale upstream checkout and staticfiles tree, causing branding drift and making splash/debug fixes appear ineffective.
+- Debug evidence:
+  - `anthias_app/views.py` and `templates/splash-page.html` in Bellforge render Bellforge branding and `splash_logo_url=/static/img/bellforge-logo.svg`.
+  - local runtime config and rendered `/splash-page` HTML both resolved to Bellforge assets.
+  - `bin/install.sh`, `bin/upgrade_containers.sh`, `ansible/roles/anthias/tasks/main.yml`, and `ansible/roles/anthias/templates/anthias-host-agent.service` still referenced upstream Screenly URLs and `/home/${USER}/anthias`.
+- Fix: repoint install/update/systemd paths to the Bellforge repository, switch production compose generation to the current repo root, and mount staticfiles from the Bellforge checkout.
+- Files:
+  - bin/install.sh
+  - bin/upgrade_containers.sh
+  - docker-compose.yml.tmpl
+  - ansible/roles/anthias/tasks/main.yml
+  - ansible/roles/anthias/templates/anthias-host-agent.service
+  - ansible/roles/anthias/vars/main.yml
+- Status: fixed in code, pending Pi-side deployment and reboot verification.
+
 ### ISSUE-018 Status Update
 - Evidence update:
   - run `artifacts/pi-display-doctor/20260508T165825Z/summary.json`: full pipeline passed after DRM-owner release.
@@ -435,3 +454,21 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - tests/test_viewer.py
   - docs/display-pipeline-fix-log.md
 - Status: fixed in code, pending Linux runtime verification.
+
+## 2025-05-11
+
+### ISSUE-027: Offline splash watchdog timeout insufficient for Qt6 WebEngine D-Bus blocking
+- Symptoms: offline splash watchdog timed out after 30 seconds while actual D-Bus rendering call to iew_webpage() took ~79 seconds on Raspberry Pi 5 with Qt6 WebEngine.
+- Impact: splash rendering would timeout and trigger retry logic, logging "offline-splash watchdog timeout after 30.xxs on attempt 1" even though the splash eventually rendered successfully. Display appeared to hang momentarily as the system recovered, degrading user experience during boot.
+- Root cause: iew_webpage() D-Bus call is blocking and waits for the Qt webview process to receive the message, render the HTML, and acknowledge completion. On Pi 5 with Qt6 WebEngine, this process takes ~79 seconds due to webview initialization overhead.
+- Debug evidence: 
+  - Container logs showed consistent timing: "offline splash rendered successfully (79.14s)" but watchdog warning at "offline-splash watchdog timeout after 30.xxs on attempt 1".
+  - The splash eventually completed and returned True, proving the timeout was a warning-only condition, not a hard blocker.
+  - Multiple container restarts during troubleshooting confirmed the 79-second duration was consistent across attempts.
+- Fix:
+  - increased SPLASH_WATCHDOG_TIMEOUT_SECONDS from 30.0 to 90.0 in viewer/__init__.py.
+  - provides 11 seconds of headroom for the actual ~79-second blocking operation.
+  - maintains watchdog's protective function for truly stuck renders while accommodating legitimate slow webview startup.
+- Files:
+  - viewer/__init__.py (SPLASH_WATCHDOG_TIMEOUT_SECONDS constant)
+- Status: fixed and validated on Pi5 with Qt6 WebEngine; offline splash now completes within timeout window without warnings.
