@@ -219,6 +219,11 @@ def _normalize_startup_host(raw_host: str) -> str:
         return host
 
     try:
+        management_port = int(getenv('MANAGEMENT_PORT', '80').strip())
+    except ValueError:
+        management_port = 80
+
+    try:
         parsed_ip = ipaddress.ip_address(host.strip('[]'))
         if isinstance(parsed_ip, ipaddress.IPv6Address):
             host = f'[{parsed_ip}]'
@@ -226,6 +231,11 @@ def _normalize_startup_host(raw_host: str) -> str:
             host = str(parsed_ip)
     except ValueError:
         pass
+
+    if management_port != 80:
+        parsed_host = urlsplit(f'//{host}')
+        if parsed_host.port is None:
+            host = f'{host}:{management_port}'
 
     return f'http://{host}'
 

@@ -30,6 +30,9 @@ else
         ./manage.py dbbackup --noinput --clean
 fi
 
+echo "Reconciling localized default assets..."
+./manage.py localize_default_assets || true
+
 UVICORN_BIND_HOST="${LISTEN:-0.0.0.0}"
 UVICORN_BIND_PORT="${PORT:-8080}"
 

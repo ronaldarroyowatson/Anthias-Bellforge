@@ -58,11 +58,22 @@
   changed_when: false
   when:
     - system_detected_timezone == ''
-    - not system_etc_timezone.stat.exists
 
-- name: Create /etc/timezone from /etc/localtime
+- name: Derive timezone from /etc/localtime symlink
+  ansible.builtin.set_fact:
+    system_fallback_timezone: >-
+      {{
+        system_localtime_link.stdout
+        | default('')
+        | regex_replace('.*/zoneinfo/', '')
+        | trim
+      }}
+  when:
+    - system_detected_timezone == ''
+
+- name: Populate /etc/timezone from /etc/localtime fallback
   ansible.builtin.copy:
-    content: "{{ system_localtime_link.stdout | regex_replace('.*/zoneinfo/', '') }}\n"
+    content: "{{ system_fallback_timezone }}\n"
     dest: /etc/timezone
     owner: root
     group: root
@@ -71,4 +82,5 @@
     mode: "0644"  # NOSONAR
   when:
     - system_detected_timezone == ''
-    - not system_etc_timezone.stat.exists
+    - system_fallback_timezone != ''
+    - not system_etc_timezone.stat.exists or (system_timezone_file.content | default('') | b64decode | trim) != system_fallback_timezone

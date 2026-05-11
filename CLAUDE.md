@@ -1,10 +1,28 @@
-# CLAUDE.md
+# CLAUDE.md - Bellforge Project Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Bellforge is a customized distribution of Anthias, maintained by Ronald Arroyo-Watson.
 
 ## Project Overview
 
-Anthias is an open-source digital signage platform for Raspberry Pi and x86 PCs (formerly Screenly OSE). It manages and displays media assets (images, videos, web pages) on connected screens.
+Bellforge is built on [Anthias](https://github.com/Screenly/Anthias), an open-source digital signage platform for Raspberry Pi and x86 PCs. Anthias is the community-maintained open-source successor to Screenly OSE.
+
+**Bellforge Purpose**: Custom enhancements and modifications to meet specific institutional and educational needs while maintaining compatibility with the upstream Anthias project.
+
+## Internal Structure vs. Public Branding
+
+**IMPORTANT**: Bellforge uses public-facing branding (splash screen, web UI, documentation) but maintains internal compatibility with Anthias infrastructure:
+- Internal code: still uses `anthias_*` naming (anthias_app, anthias_django, etc.)
+- Docker services: still named `anthias-server`, `anthias-celery`, `anthias-viewer`
+- Database files: still named `anthias.db`, `anthias.conf`
+- File paths: still use `~/.anthias/`, `/data/anthias_assets/`
+
+This approach allows Bellforge to:
+1. Maintain upstream compatibility with Anthias
+2. Differentiate the custom distribution with its own branding
+3. Accept upstream updates without breaking customizations
+4. Properly attribute original authors
+
+## Architecture
 
 ## Architecture
 

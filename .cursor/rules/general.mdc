@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 # General
 
-- Anthias uses Django as the web framework
+- Bellforge uses Django as the web framework
 
 # Project Structure
 
@@ -20,12 +20,12 @@ alwaysApply: true
 - This project uses Docker for containerization.
   - [docker-compose.yml.tmpl](mdc:docker-compose.yml.tmpl) is used for instances installed on Raspberry Pi and x86 devices
     that runs Raspberry Pi OS Lite or Debian.
-  - [docker-compose.dev.yml](mdc:docker-compose.dev.yml) is used for Anthias in development mode (e.g., in a laptop or
+  - [docker-compose.dev.yml](mdc:docker-compose.dev.yml) is used for Bellforge in development mode (e.g., in a laptop or
     personal computer).
   - [docker-compose.balena.yml.tmpl](mdc:docker-compose.balena.yml.tmpl) is used for instances installed on devices that runs
     balenaOS.
-  - The [docker](mdc:docker) directory contains all the necessary Dockerfiles needed by Anthias.
-- The [requirements](mdc:requirements) directory contains all the requirements files required by Anthias
+  - The [docker](mdc:docker) directory contains all the necessary Dockerfiles needed by Bellforge.
+- The [requirements](mdc:requirements) directory contains all the requirements files required by Bellforge
 - [webview](mdc:webview) contains C++ (Qt) source code necessary for the WebView, which is
   a custom-built web browser that makes display of assets (images, videos, or web pages) in
   a connected display (like a TV) possible.

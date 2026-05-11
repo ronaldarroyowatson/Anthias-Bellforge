@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for Anthias
+about: Suggest an idea for Bellforge
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''

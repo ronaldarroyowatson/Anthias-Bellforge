@@ -5,13 +5,13 @@
    push/delete access. Without it, packages stay private even when the
    repo is public, and the package page on GitHub has no link back. #}
 {% set service_descriptions = {
-    'server': 'Anthias web server (uvicorn + Django + Channels); also runs the Celery worker via a CMD override',
-    'redis': 'Redis broker for Anthias Celery and Channels',
-    'viewer': 'Anthias display/viewer service',
-    'test': 'Anthias test runner',
+    'server': 'Bellforge web server (uvicorn + Django + Channels); based on Anthias by Screenly, Inc.',
+    'redis': 'Redis broker for Bellforge Celery and Channels',
+    'viewer': 'Bellforge display/viewer service',
+    'test': 'Bellforge test runner',
 } %}
-LABEL org.opencontainers.image.source="https://github.com/Screenly/Anthias"
-LABEL org.opencontainers.image.url="https://anthias.screenly.io"
+LABEL org.opencontainers.image.source="https://github.com/ronaldwatson/Anthias-Bellforge"
+LABEL org.opencontainers.image.url="https://github.com/ronaldwatson/Anthias-Bellforge"
 LABEL org.opencontainers.image.licenses="GPL-2.0"
-LABEL org.opencontainers.image.title="anthias-{{ service }}"
-LABEL org.opencontainers.image.description="{{ service_descriptions.get(service, 'Anthias ' + service) }}"
+LABEL org.opencontainers.image.title="bellforge-{{ service }}"
+LABEL org.opencontainers.image.description="{{ service_descriptions.get(service, 'Bellforge ' + service) }}"

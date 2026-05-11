@@ -1,6 +1,17 @@
-# Copilot Instructions
+# Copilot Instructions - Bellforge Project
 
-Purpose: enforce repository coding conventions and the display-pipeline bugfix workflow.
+**Project**: Bellforge (derivative of Anthias by Screenly, Inc.)  
+**Maintainer**: Ronald Arroyo-Watson  
+**License**: GPLv2 (consistent with upstream Anthias)  
+**Purpose**: Custom distribution with enhancements while maintaining upstream compatibility
+
+## Bellforge-Specific Guidelines
+
+1. **Public Branding** - Update splash screen, web UI, and documentation with "Bellforge" branding
+2. **Internal Compatibility** - Keep `anthias_*` naming in code, Docker services, file paths, and databases
+3. **Attribution** - Always credit Screenly, Inc. and the Anthias project as the upstream source
+4. **Differentiation** - Clearly mark Bellforge-specific features and modifications
+5. **Upstream Synchronization** - When merging upstream Anthias changes, preserve both Bellforge branding and Anthias compatibility
 
 ## Ronald Style Conventions
 

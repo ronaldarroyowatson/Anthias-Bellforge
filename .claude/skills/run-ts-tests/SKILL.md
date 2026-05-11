@@ -1,6 +1,6 @@
 # run-ts-tests Skill
 
-Run Anthias TypeScript/React unit tests with bun.
+Run Bellforge TypeScript/React unit tests with bun.
 
 ## Usage
 

@@ -53,11 +53,9 @@
   },
 
   // ── YAML ─────────────────────────────────────────────────────────────────
-  "yaml.schemas": {
-    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.{yml,yaml}",
-    "https://json.schemastore.org/docker-compose.json": "docker-compose*.yml",
-    "https://json.schemastore.org/ansible-playbook.json": "ansible/**/*.{yml,yaml}"
-  },
+  "yaml.schemaStore.enable": false,
+  "yaml.schemaStore.url": "",
+  "yaml.schemas": {},
 
   // ── Editor General ────────────────────────────────────────────────────────
   "editor.rulers": [79],
@@ -101,7 +99,7 @@
   // ── Redis Client ─────────────────────────────────────────────────────────
   "redis.connections": [
     {
-      "name": "Anthias Dev Redis",
+      "name": "Bellforge Dev Redis",
       "host": "localhost",
       "port": 6379,
       "db": 0

@@ -1,3 +1,28 @@
+================================================================================
+BELLFORGE LICENSE AND ATTRIBUTION
+================================================================================
+
+Bellforge is a derivative work of Anthias (formerly Screenly OSE), created and
+maintained by Ronald Arroyo-Watson.
+
+ORIGINAL PROJECT ATTRIBUTION:
+- Original work: Screenly OSE / Anthias
+- Creator: Screenly, Inc.
+- Repository: https://github.com/Screenly/Anthias
+- Original License: GPLv2 / Commercial (see https://anthias.screenly.io)
+
+BELLFORGE MODIFICATIONS:
+- Copyright 2026, Ronald Arroyo-Watson
+- License: GPLv2 (consistent with upstream)
+
+This derivative work maintains the GPLv2 license of the original project and
+adds Bellforge-specific enhancements. All modifications are open source and
+available under the same GPLv2 terms.
+
+================================================================================
+GPLv2 TEXT (Original Screenly OSE / Anthias License)
+================================================================================
+
 Project is licensed under dual license: GPLv2 and Commercial License
 (see anthias.screenly.io for more information).
 

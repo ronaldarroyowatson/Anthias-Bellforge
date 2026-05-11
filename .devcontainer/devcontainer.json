@@ -1,5 +1,5 @@
 {
-  "name": "Anthias-Bellforge Dev",
+  "name": "Bellforge Dev",
   "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
 
   // Install additional tools inside the container

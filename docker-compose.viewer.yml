@@ -41,6 +41,8 @@ services:
       - HOME=/data
       - PORT=8080
       - LISTEN=anthias-server
+      - MY_IP=${MY_IP:-}
+      - MANAGEMENT_PORT=8000
       - QT_QPA_PLATFORM=eglfs
       - QT_QPA_EGLFS_KMS_ATOMIC=0
       - VIEWER_DISPLAY_DEBUG=1

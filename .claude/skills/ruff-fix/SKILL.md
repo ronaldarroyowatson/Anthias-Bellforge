@@ -1,6 +1,6 @@
 # ruff-fix Skill
 
-Run ruff linting and formatting on Anthias Python source files.
+Run ruff linting and formatting on Bellforge Python source files.
 
 ## Usage
 

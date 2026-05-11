@@ -1,6 +1,6 @@
 # run-python-tests Skill
 
-Run Anthias Python unit or integration tests inside Docker.
+Run Bellforge Python unit or integration tests inside Docker.
 
 ## Usage
 

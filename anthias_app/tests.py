@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -6,8 +7,9 @@ from unittest import mock
 from django.http import Http404
 from django.http.response import HttpResponseBase
 from django.test import RequestFactory, TestCase
+from django.utils import timezone
 
-from anthias_app import views, views_files
+from anthias_app import helpers, views, views_files
 
 # Standard private/public IP literals reused across the IP-allowlist
 # tests below. Centralised so Sonar's S1313 ("don't hardcode IPs") is
@@ -371,3 +373,97 @@ class SplashPageReachabilityTest(TestCase):
         self.assertNotContains(
             response, 'http://192.168.1.20/'
         )  # no bare port-80
+
+
+class DefaultAssetUriLocalizationTest(TestCase):
+    def test_weather_uri_is_localized_with_public_coordinates(self) -> None:
+        with mock.patch.object(
+            helpers,
+            '_lookup_public_coordinates',
+            return_value=('36.15398', '-95.99277'),
+        ):
+            localized_uri = helpers._localize_default_asset_uri(
+                'https://weather.srly.io'
+            )
+
+        self.assertEqual(
+            localized_uri,
+            'https://weather.srly.io?lat=36.15398&lng=-95.99277',
+        )
+
+    def test_weather_uri_keeps_existing_coordinates(self) -> None:
+        original_uri = 'https://weather.srly.io?lat=1.0&lng=2.0'
+        with mock.patch.object(
+            helpers,
+            '_lookup_public_coordinates',
+            return_value=('36.15398', '-95.99277'),
+        ):
+            localized_uri = helpers._localize_default_asset_uri(original_uri)
+
+        self.assertEqual(localized_uri, original_uri)
+
+    def test_non_weather_uri_is_not_modified(self) -> None:
+        uri = 'https://clock.srly.io'
+        with mock.patch.object(
+            helpers,
+            '_lookup_public_coordinates',
+            return_value=('36.15398', '-95.99277'),
+        ):
+            localized_uri = helpers._localize_default_asset_uri(uri)
+
+        self.assertEqual(localized_uri, uri)
+
+    @mock.patch.object(helpers, '_lookup_public_coordinates')
+    def test_localize_existing_default_assets_updates_missing_coordinates(
+        self, lookup_mock: Any
+    ) -> None:
+        lookup_mock.return_value = ('36.15398', '-95.99277')
+        datetime_now = timezone.now()
+        weather_asset = helpers.Asset.objects.create(
+            asset_id='default_weather_missing_coords',
+            duration=30,
+            end_date=datetime_now + timedelta(days=365),
+            is_enabled=True,
+            is_processing=0,
+            mimetype='webpage',
+            name='Bellforge Weather Widget',
+            nocache=0,
+            play_order=0,
+            skip_asset_check=0,
+            start_date=datetime_now,
+            uri='https://weather.srly.io',
+        )
+
+        updated_count = helpers.localize_existing_default_assets()
+
+        weather_asset.refresh_from_db()
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(
+            weather_asset.uri,
+            'https://weather.srly.io?lat=36.15398&lng=-95.99277',
+        )
+
+    @mock.patch.object(helpers, '_lookup_public_coordinates')
+    def test_localize_existing_default_assets_skips_already_localized_assets(
+        self, lookup_mock: Any
+    ) -> None:
+        lookup_mock.return_value = ('36.15398', '-95.99277')
+        datetime_now = timezone.now()
+        helpers.Asset.objects.create(
+            asset_id='default_weather_has_coords',
+            duration=30,
+            end_date=datetime_now + timedelta(days=365),
+            is_enabled=True,
+            is_processing=0,
+            mimetype='webpage',
+            name='Bellforge Weather Widget',
+            nocache=0,
+            play_order=0,
+            skip_asset_check=0,
+            start_date=datetime_now,
+            uri='https://weather.srly.io?lat=36.15398&lng=-95.99277',
+        )
+
+        updated_count = helpers.localize_existing_default_assets()
+
+        self.assertEqual(updated_count, 0)

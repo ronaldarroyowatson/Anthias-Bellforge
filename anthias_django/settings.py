@@ -8,6 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 import secrets
 from os import getenv
 from pathlib import Path
@@ -191,11 +192,40 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+def _timezone_from_localtime() -> str:
+    localtime_path = '/etc/localtime'
+    try:
+        resolved_path = os.path.realpath(localtime_path)
+    except OSError:
+        return ''
+
+    marker = '/zoneinfo/'
+    marker_index = resolved_path.find(marker)
+    if marker_index == -1:
+        return ''
+
+    return resolved_path[marker_index + len(marker) :].strip()
+
+
+configured_timezone = (
+    getenv('ANTHIAS_TIME_ZONE', '').strip() or getenv('TZ', '').strip()
+)
+
+if not configured_timezone:
+    configured_timezone = _timezone_from_localtime()
+
+if not configured_timezone:
+    try:
+        with open('/etc/timezone', 'r') as f:
+            configured_timezone = f.read().strip()
+    except FileNotFoundError:
+        configured_timezone = ''
+
 try:
-    with open('/etc/timezone', 'r') as f:
-        TIME_ZONE = f.read().strip()
-        pytz.timezone(TIME_ZONE)  # Checks if the timezone is valid.
-except (pytz.exceptions.UnknownTimeZoneError, FileNotFoundError):
+    TIME_ZONE = configured_timezone
+    pytz.timezone(TIME_ZONE)  # Checks if the timezone is valid.
+except pytz.exceptions.UnknownTimeZoneError:
     TIME_ZONE = 'UTC'
 
 

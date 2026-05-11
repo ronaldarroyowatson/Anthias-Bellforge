@@ -304,6 +304,35 @@ class TestDisplayPipelineRouting(ViewerTestCase):
         rendered_html = unquote(offline_url[len('data:text/html,') :])
         self.assertIn('http://10.0.0.20', rendered_html)
 
+    def test_offline_splash_appends_management_port(self) -> None:
+        def _getenv(key: str, default: str = '') -> str:
+            if key == 'MY_IP':
+                return '192.168.2.180'
+            if key == 'MANAGEMENT_PORT':
+                return '8000'
+            return default
+
+        with mock.patch.object(self.u, 'getenv', side_effect=_getenv):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://192.168.2.180:8000', rendered_html)
+
+    def test_offline_splash_skips_default_http_port_suffix(self) -> None:
+        def _getenv(key: str, default: str = '') -> str:
+            if key == 'MY_IP':
+                return '192.168.2.180'
+            if key == 'MANAGEMENT_PORT':
+                return '80'
+            return default
+
+        with mock.patch.object(self.u, 'getenv', side_effect=_getenv):
+            offline_url = self.u._build_offline_splash_url()
+
+        rendered_html = unquote(offline_url[len('data:text/html,') :])
+        self.assertIn('http://192.168.2.180', rendered_html)
+        self.assertNotIn('http://192.168.2.180:80', rendered_html)
+
     def test_offline_splash_uses_host_local_domain_when_ip_unavailable(
         self,
     ) -> None:

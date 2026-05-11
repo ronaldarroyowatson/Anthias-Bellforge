@@ -1,5 +1,5 @@
 {
-  "name": "anthias",
+  "name": "bellforge",
   "version": "1.0.0",
   "scripts": {
     "build:js": "bun build ./static/src/index.tsx --outfile=./static/dist/js/anthias.js --target=browser --production --define process.env.ENVIRONMENT='\"production\"'",

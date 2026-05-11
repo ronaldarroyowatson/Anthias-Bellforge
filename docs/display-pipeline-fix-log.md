@@ -327,3 +327,90 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
   - tests/test_utils.py
   - anthias_app/tests.py
 - Status: fixed in code; pending final Pi runtime confirmation after redeploy.
+
+### ISSUE-025: Startup guidance and default widgets were not localized on Pi dev runtime
+- Symptoms:
+  - offline startup splash could advertise non-working guidance without the
+    dev management port.
+  - default weather widget showed San Francisco when weather URL had no
+    coordinates.
+  - Pi host timezone remained UTC, causing clock/widget time drift from local
+    expectation.
+- Impact:
+  - slower setup/recovery during display incidents.
+  - misleading location/time during default-asset playback.
+- Debug evidence:
+  - runtime telemetry showed alternating renders of
+    `https://weather.srly.io` and `https://clock.srly.io`.
+  - `timedatectl` on Pi reported `UTC` before runtime correction.
+  - weather widget source and query probe confirmed `lat/lng` are supported
+    and absent by default.
+- Fix:
+  - viewer offline URL normalization now appends `MANAGEMENT_PORT` when set
+    (for example, `:8000` in dev).
+  - viewer dev overlay now passes `MY_IP` and `MANAGEMENT_PORT` to the viewer
+    service.
+  - default-asset insertion now localizes `weather.srly.io` URIs by looking up
+    public coordinates and appending `lat`/`lng` query values.
+  - Django timezone resolution now honors `ANTHIAS_TIME_ZONE` or `TZ` before
+    `/etc/timezone` fallback.
+  - regression tests added for weather URI localization and offline splash port
+    behavior.
+- Files:
+  - viewer/__init__.py
+  - docker-compose.viewer.yml
+  - anthias_app/helpers.py
+  - anthias_app/tests.py
+  - tests/test_viewer.py
+  - anthias_django/settings.py
+- Status: fixed in code; runtime timezone corrected on Pi; weather URI runtime
+  rewrite pending direct DB update command execution.
+
+### ISSUE-025 Status Update
+- Evidence update:
+  - persisted default weather asset on Pi now includes coordinates:
+    `https://weather.srly.io?lat=36.15398&lng=-95.99277`.
+  - render telemetry confirms localized weather URI is now actively rendered.
+  - host and viewer runtime clocks both report `America/Chicago` / `CDT`.
+- Permanent update-hardening:
+  - added `anthias_app` management command `localize_default_assets`.
+  - wired startup reconciliation in `bin/start_server.sh` so upgrades
+    localize existing default weather assets automatically.
+  - timezone resolution now prefers env override, then `/etc/localtime`
+    symlink-derived zone, then `/etc/timezone` fallback.
+  - targeted Linux tests pass for default-asset localization and offline
+    splash management-port URL behavior.
+- Files:
+  - anthias_app/helpers.py
+  - anthias_app/management/commands/localize_default_assets.py
+  - anthias_app/tests.py
+  - bin/start_server.sh
+  - anthias_django/settings.py
+  - viewer/__init__.py
+  - tests/test_viewer.py
+- Status: resolved and validated on Pi runtime with upgrade-safe path.
+
+### ISSUE-026: Clock widget could drift when `/etc/timezone` stayed stale after host timezone change
+- Symptoms:
+  - weather widget time/location correct (geo-driven), but clock widget still
+    displayed an incorrect hour after reboot.
+  - host `timedatectl` and `/etc/localtime` reflected local timezone while
+    `/etc/timezone` still contained stale `UTC`.
+- Impact:
+  - default clock page could show wrong local time on otherwise healthy
+    startup/runtime pipelines.
+- Debug evidence:
+  - host: `timedatectl -> America/Chicago`, `readlink -f /etc/localtime ->
+    /usr/share/zoneinfo/America/Chicago`, but `cat /etc/timezone -> UTC`.
+  - viewer render history alternated expected clock/weather pages, indicating
+    display intent was healthy and issue was timezone source consistency.
+- Fix:
+  - update timezone ansible task to reconcile `/etc/timezone` from
+    `/etc/localtime` fallback even when `/etc/timezone` already exists.
+  - update `bin/start_viewer.sh` to derive/export `TZ` from
+    `/etc/localtime` symlink at startup, with `/etc/timezone` as secondary
+    fallback.
+- Files:
+  - ansible/roles/system/tasks/timezone.yml
+  - bin/start_viewer.sh
+- Status: fixed in code; pending user visual confirmation after reboot/start.

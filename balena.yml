@@ -1,14 +1,14 @@
-name: "Anthias"
+name: "Bellforge"
 type: "sw.application"
 description: >-
-  The world's most popular open source digital signage project
+  The world's most popular open source digital signage project — customized as Bellforge
 post-provisioning: >-
 
   ## Introduction
 
-  Anthias (formerly known as Screenly OSE) is free digital signage software that is backed by our community and maintained by Screenly, Inc.
+  Bellforge is a community-driven distribution of Anthias, the free digital signage software maintained by Screenly, Inc.
 
-  With Anthias, a monitor/TV and a Raspberry Pi, you can create a remotely managed screen that can display:
+  With Bellforge on a monitor/TV and a Raspberry Pi, you can create a remotely managed screen that can display:
 
   * Images
 

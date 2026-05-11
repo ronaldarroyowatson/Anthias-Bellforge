@@ -1,6 +1,6 @@
 # docker-rebuild Skill
 
-Rebuild one or more Anthias Docker services and tail their logs.
+Rebuild one or more Bellforge Docker services and tail their logs.
 
 ## Usage
 

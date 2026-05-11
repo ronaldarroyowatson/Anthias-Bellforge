@@ -100,6 +100,27 @@ if [ "${VIEWER_DISPLAY_DEBUG:-0}" = "1" ]; then
         [ -n "$overlay" ] && echo "start_viewer: $overlay"
     fi
 
+
+# Ensure the viewer process has a deterministic timezone even when
+# /etc/timezone is stale. Prefer /etc/localtime symlink because it tracks
+# timedatectl state on Debian-based systems.
+if [ -z "${TZ:-}" ]; then
+    LOCALTIME_TARGET=$(readlink -f /etc/localtime 2>/dev/null || true)
+    case "$LOCALTIME_TARGET" in
+        */zoneinfo/*)
+            TZ="${LOCALTIME_TARGET##*/zoneinfo/}"
+            export TZ
+            ;;
+        *)
+            if [ -r /etc/timezone ]; then
+                TZ=$(tr -d '[:space:]' < /etc/timezone)
+                [ -n "$TZ" ] && export TZ
+            fi
+            ;;
+    esac
+fi
+
+[ -n "${TZ:-}" ] && echo "start_viewer: TZ=$TZ"
     # Keep default log volume reasonable unless explicitly overridden.
     export QT_QPA_DEBUG="${QT_QPA_DEBUG:-1}"
     export QT_LOGGING_RULES="${QT_LOGGING_RULES:-qt.qpa.*=true}"

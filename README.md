@@ -1,5 +1,5 @@
 <h1 align="center" style="border-bottom: none;">
-    Anthias
+    Bellforge
     &middot;
     Open Source Digital Signage Solution for Raspberry Pi and PC
 </h1>
@@ -15,26 +15,28 @@
 
 <br>
 
-![Anthias Logo](https://github.com/Screenly/Anthias/blob/master/static/img/color.svg?raw=true  "Anthias Logo")
+![Bellforge Logo](https://github.com/Screenly/Anthias/blob/master/static/img/color.svg?raw=true  "Bellforge Logo")
 
 <br>
 
-## :sparkles: About Anthias
+## :sparkles: About Bellforge
 
-Anthias is a digital signage platform for Raspberry Pi devices and PCs. Formerly known as Screenly OSE, it was rebranded to clear up the confusion between Screenly (the paid version) and Anthias. More details can be found in [this blog post](https://www.screenly.io/blog/2022/12/06/screenly-ose-now-called-anthias/).
+Bellforge is a customized distribution of [Screenly OSE](https://github.com/Screenly/Anthias) (now Anthias), an open-source digital signage platform for Raspberry Pi devices and PCs.
 
-Want to help Anthias thrive? Support us using [GitHub Sponsor](https://github.com/sponsors/Screenly).
+This custom distribution is maintained by Ronald Arroyo-Watson with enhancements and modifications to meet specific educational and institutional needs.
+
+**Credits**: Bellforge is built on the excellent work of [Screenly, Inc.](https://www.screenly.io/) and the open-source community. The original Screenly OSE project can be found [here](https://github.com/Screenly/Anthias).
 
 ## :rocket: Getting Started
 
-See [this](/docs/installation-options.md) page for options on how to install Anthias.
+See [this](/docs/installation-options.md) page for options on how to install Bellforge (which uses the same installation process as Anthias).
 
 ## :white_check_mark: Compatibility
 
 ### balenaOS
 
 > [!NOTE]
-> See [this](/docs/installation-options.md) page for instructions on how to install Anthias on balenaOS.
+> See [this](/docs/installation-options.md) page for instructions on how to install Bellforge on balenaOS.
 > You can either use the [images from balenaHub](/docs/installation-options.md#using-the-images-from-balenahub)
 > or [download the images from the releases](/docs/installation-options.md#using-the-images-from-the-releases).
 
@@ -52,8 +54,8 @@ See [this](/docs/installation-options.md) page for options on how to install Ant
 
 > [!NOTE]
 > We're still fixing the Raspberry Pi OS installer so that it'll work with Raspberry Pi Zero and Raspberry Pi 1.
-> Should you encounter any issues, please file an issue either in this repository or in the
-[forums](https://forums.screenly.io).
+> Should you encounter any issues, please file an issue in this repository. For upstream issues with Anthias/Screenly, visit the
+[Screenly forums](https://forums.screenly.io).
 
 ## :star: Star History
 
@@ -62,13 +64,14 @@ See [this](/docs/installation-options.md) page for options on how to install Ant
 ## :lady_beetle: Issues and Bugs
 
 > [!NOTE]
-> We are still in the process of knocking out some bugs. You can track the known issues [here](https://github.com/Screenly/Anthias/issues). You can also check the discussions in the [Anthias forums](https://forums.screenly.io).
+> For Bellforge-specific issues, use this repository's [issues tracker](../../issues). For upstream Anthias/Screenly issues, visit [here](https://github.com/Screenly/Anthias/issues). You can also check the discussions in the [Screenly forums](https://forums.screenly.io).
 
 ## :zap: Quick Links
 
-* [Forum](https://forums.screenly.io/)
-* [Website](https://anthias.screenly.io) (hosted on GitHub and the source is available [here](/website))
-* [General documentation](https://github.com/Screenly/Anthias/blob/master/docs/README.md)
-* [Developer documentation](https://github.com/Screenly/Anthias/blob/master/docs/developer-documentation.md)
+* [Screenly Forum](https://forums.screenly.io/) (upstream community)
+* [Bellforge Documentation](/docs/README.md)
+* [Bellforge Developer Documentation](/docs/developer-documentation.md)
+* [Original Anthias Project](https://github.com/Screenly/Anthias) (upstream source)
+* [Upstream Website](https://anthias.screenly.io)
 * [Migrating assets from Anthias to Screenly](/docs/migrating-assets-to-screenly.md)
 * [WebView](/webview/README.md)
