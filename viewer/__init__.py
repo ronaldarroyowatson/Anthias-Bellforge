@@ -316,7 +316,7 @@ def _build_offline_splash_url() -> str:
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Anthias Startup</title>
+    <title>Bellforge Startup</title>
     <style>
         :root {{
             --bg: #0b1220;
@@ -367,7 +367,7 @@ def _build_offline_splash_url() -> str:
 </head>
 <body>
     <main class="panel">
-        <h1>Anthias is starting</h1>
+        <h1>Bellforge is loading</h1>
         <p>The device display is online and waiting for the server splash page.</p>
         <p>Open this address from another device on your network:</p>
         <div class="url">{connect_url}</div>

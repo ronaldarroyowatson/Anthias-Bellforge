@@ -129,12 +129,12 @@ def get_node_ip() -> str:
         if response.ok:
             return str(response.json()['ip_address'])
         return 'Unknown'
-    
+
     # Check MY_IP first (fast path for Docker environments where host_agent
     # is not running, or when explicitly set by deploy scripts).
     if os.getenv('MY_IP'):
         return os.getenv('MY_IP') or 'Unable to retrieve IP.'
-    
+
     else:
         r = connect_to_redis()
         max_retries = 60
@@ -188,7 +188,6 @@ def get_node_ip() -> str:
             return ' '.join(json.loads(ip_addresses))
 
     return 'Unable to retrieve IP.'
-
 
 
 def get_node_hostname() -> str:
