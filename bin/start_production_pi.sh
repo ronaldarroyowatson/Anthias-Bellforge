@@ -50,4 +50,4 @@ echo "==> Starting production stack..."
 docker compose -f "$COMPOSE_FILE" up -d
 
 echo "==> Done!"
-docker compose -f /tmp/docker-compose.prod.yml ps
+docker compose -f "$COMPOSE_FILE" ps
