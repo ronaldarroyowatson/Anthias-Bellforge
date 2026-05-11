@@ -123,8 +123,18 @@ SUBSCRIBER_READY_POLL_INTERVAL_SECONDS = 0.2
 SETUP_RETRY_ATTEMPTS = 5
 SETUP_RETRY_DELAY_SECONDS = 2
 STARTUP_SPLASH_MIN_SECONDS_DEFAULT = 15.0
-STARTUP_SPLASH_RENDER_ATTEMPTS = 3
-STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS = 0.7
+STARTUP_SPLASH_RENDER_ATTEMPTS = 5
+STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS = 1.5
+# How long to wait after loadPage returns before assuming the webview has
+# actually painted. Without this, the startup sequence races ahead while the
+# screen is still blank.
+SPLASH_POST_RENDER_SETTLE_SECONDS = 2.0
+# Offline splash is rendered before the server health check; hold it visible
+# for at least this long so it cannot be blinked away immediately.
+OFFLINE_SPLASH_MIN_HOLD_SECONDS = 3.0
+# Maximum total time to spend trying to confirm the splash is visible before
+# giving up and proceeding (prevents startup deadlock).
+SPLASH_WATCHDOG_TIMEOUT_SECONDS = 30.0
 
 
 def _display_debug_enabled() -> bool:
@@ -380,25 +390,53 @@ def _build_offline_splash_url() -> str:
 
 
 def _show_splash_with_fallback(server_is_ready: bool | None = None) -> bool:
+    splash_start = monotonic()
+
     if server_is_ready is None:
         server_is_ready = wait_for_server(retries=1, wt=0)
 
     if server_is_ready:
         logging.info('viewer startup: using server splash page')
         try:
+            logging.info(
+                'viewer startup: calling view_webpage(%s) for server splash',
+                SPLASH_PAGE_URL,
+            )
             view_webpage(SPLASH_PAGE_URL)
+            elapsed = monotonic() - splash_start
+            logging.info(
+                'viewer startup: server splash rendered successfully (%.2fs)',
+                elapsed,
+            )
+            # Settle: give the webview time to actually paint before we return.
+            sleep(SPLASH_POST_RENDER_SETTLE_SECONDS)
             return True
         except Exception:
+            elapsed = monotonic() - splash_start
             logging.exception(
-                'viewer startup: failed rendering server splash; '
-                'falling back offline'
+                'viewer startup: failed rendering server splash after %.2fs; '
+                'falling back offline',
+                elapsed,
             )
 
     logging.warning('viewer startup: using offline splash fallback')
+    offline_splash_url = _build_offline_splash_url()
     try:
-        view_webpage(_build_offline_splash_url())
+        logging.info('viewer startup: calling view_webpage for offline splash')
+        view_webpage(offline_splash_url)
+        elapsed = monotonic() - splash_start
+        logging.info(
+            'viewer startup: offline splash rendered successfully (%.2fs)',
+            elapsed,
+        )
+        # Settle: give the webview time to actually paint before we return.
+        sleep(SPLASH_POST_RENDER_SETTLE_SECONDS)
     except Exception:
-        logging.exception('viewer startup: failed rendering offline splash')
+        elapsed = monotonic() - splash_start
+        logging.exception(
+            'viewer startup: failed rendering offline splash after %.2fs',
+            elapsed,
+        )
     return False
 
 
@@ -412,11 +450,37 @@ def _render_startup_splash_with_retry(
     rendered_server_splash = False
     total_attempts = max(attempts, 1)
 
+    logging.info(
+        'viewer startup: _render_startup_splash_with_retry starting '
+        '(server_is_ready=%s, attempts=%d)',
+        server_is_ready,
+        total_attempts,
+    )
+
     for attempt in range(1, total_attempts + 1):
+        logging.info(
+            'viewer startup: splash render attempt %d/%d',
+            attempt,
+            total_attempts,
+        )
         rendered_server_splash = _show_splash_with_fallback(server_is_ready)
+        if rendered_server_splash:
+            logging.info(
+                'viewer startup: splash rendered successfully on attempt %d',
+                attempt,
+            )
+            return rendered_server_splash
         if attempt < total_attempts:
+            logging.info(
+                'viewer startup: splash render failed, retrying after %.1fs',
+                retry_delay_seconds,
+            )
             sleep(max(retry_delay_seconds, 0.0))
 
+    logging.warning(
+        'viewer startup: splash rendering failed after %d attempts',
+        total_attempts,
+    )
     return rendered_server_splash
 
 
@@ -429,10 +493,23 @@ def _ensure_browser_bus_ready() -> None:
     global browser_bus
 
     if browser_bus is not None:
+        logging.debug('viewer display: browser_bus already connected')
         return
 
     logging.warning('viewer display: browser_bus missing; reconnecting')
-    browser_bus = _connect_browser_bus()
+    try:
+        bus_connect_start = monotonic()
+        browser_bus = _connect_browser_bus()
+        elapsed = monotonic() - bus_connect_start
+        logging.info(
+            'viewer display: browser_bus reconnected successfully (%.2fs)',
+            elapsed,
+        )
+    except Exception as exc:
+        logging.exception(
+            'viewer display: failed to reconnect browser_bus: %s', exc
+        )
+        raise
 
 
 def _log_startup_timeline_event(started_at: float, event: str) -> None:
@@ -442,6 +519,81 @@ def _log_startup_timeline_event(started_at: float, event: str) -> None:
         elapsed_seconds,
         event,
     )
+
+
+def _render_splash_with_gate(
+    server_is_ready: bool | None = None,
+    gate_name: str = 'splash-render',
+    watchdog_timeout_seconds: float = SPLASH_WATCHDOG_TIMEOUT_SECONDS,
+) -> None:
+    """
+    Render startup splash with a watchdog that keeps retrying until the splash
+    succeeds or the watchdog timeout expires.
+
+    This prevents the startup sequence from racing past a blank screen: the
+    caller blocks here until either the webview confirms the page was loaded
+    (with settle delay) or the hard timeout is reached. On timeout the startup
+    is allowed to continue with a clear warning so the device doesn't deadlock.
+
+    Splash state is stored in Redis for remote diagnostics.
+    """
+    render_start = monotonic()
+    attempt = 0
+    rendered = False
+
+    logging.info(
+        'viewer startup: %s watchdog starting (timeout=%.1fs)',
+        gate_name,
+        watchdog_timeout_seconds,
+    )
+
+    while not rendered:
+        elapsed = monotonic() - render_start
+        if elapsed >= watchdog_timeout_seconds:
+            logging.warning(
+                'viewer startup: %s watchdog timeout after %.2fs '
+                'on attempt %d; proceeding without confirmed splash',
+                gate_name,
+                elapsed,
+                attempt,
+            )
+            r.set(f'viewer-{gate_name}-status', 'timeout')
+            r.set(f'viewer-{gate_name}-elapsed', str(elapsed))
+            return
+
+        attempt += 1
+        logging.info(
+            'viewer startup: %s attempt %d (t+%.2fs)',
+            gate_name,
+            attempt,
+            elapsed,
+        )
+
+        rendered = _show_splash_with_fallback(server_is_ready)
+
+        if not rendered:
+            remaining = watchdog_timeout_seconds - (monotonic() - render_start)
+            if remaining > STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS:
+                logging.info(
+                    'viewer startup: %s attempt %d failed; '
+                    'retrying in %.1fs (%.1fs remaining)',
+                    gate_name,
+                    attempt,
+                    STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS,
+                    remaining,
+                )
+                sleep(STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS)
+
+    elapsed = monotonic() - render_start
+    logging.info(
+        'viewer startup: %s confirmed after %d attempt(s) (%.2fs)',
+        gate_name,
+        attempt,
+        elapsed,
+    )
+    r.set(f'viewer-{gate_name}-status', 'success')
+    r.set(f'viewer-{gate_name}-elapsed', str(elapsed))
+    r.set(f'viewer-{gate_name}-attempts', str(attempt))
 
 
 def _wait_for_subscriber_ready(
@@ -507,8 +659,19 @@ def load_browser() -> None:
     global browser, browser_stdout_cursor
     logging.info('Loading browser...')
 
-    browser = sh.Command('AnthiasWebview')(_bg=True, _err_to_out=True)
-    browser_stdout_cursor = 0
+    browser_start = monotonic()
+    try:
+        browser = sh.Command('AnthiasWebview')(_bg=True, _err_to_out=True)
+        browser_stdout_cursor = 0
+        logging.info(
+            'viewer display: AnthiasWebview process spawned (pid=%s)',
+            browser.process.pid,
+        )
+    except Exception as exc:
+        logging.exception(
+            'viewer display: failed to spawn AnthiasWebview: %s', exc
+        )
+        raise
 
     # Bound the wait so we don't hang the viewer indefinitely if
     # AnthiasWebview fails to register on D-Bus (missing binary, broken
@@ -517,19 +680,29 @@ def load_browser() -> None:
     deadline = monotonic() + BROWSER_STARTUP_TIMEOUT_SECONDS
     while monotonic() < deadline:
         _drain_browser_stdout()
-        if BROWSER_HANDSHAKE_LINE in browser.process.stdout.decode('utf-8'):
+        stdout_content = browser.process.stdout.decode('utf-8')
+        if BROWSER_HANDSHAKE_LINE in stdout_content:
+            elapsed = monotonic() - browser_start
+            logging.info(
+                'viewer display: browser handshake received after %.2fs',
+                elapsed,
+            )
             return
         if not browser.is_alive():
+            elapsed = monotonic() - browser_start
+            stdout_tail = browser.process.stdout.decode(
+                'utf-8', errors='replace'
+            )[-500:]
             raise RuntimeError(
-                'AnthiasWebview exited before emitting D-Bus handshake; '
-                'stdout: '
-                + browser.process.stdout.decode('utf-8', errors='replace')
+                f'AnthiasWebview exited before emitting D-Bus handshake '
+                f'after {elapsed:.2f}s; stdout tail: ' + stdout_tail
             )
         sleep(1)
 
+    elapsed = monotonic() - browser_start
     raise TimeoutError(
         f'AnthiasWebview did not emit "{BROWSER_HANDSHAKE_LINE}" within '
-        f'{BROWSER_STARTUP_TIMEOUT_SECONDS}s'
+        f'{BROWSER_STARTUP_TIMEOUT_SECONDS}s (elapsed: {elapsed:.2f}s)'
     )
 
 
@@ -540,6 +713,9 @@ def _should_force_webpage_refresh(uri: str) -> bool:
 def view_webpage(uri: str) -> None:
     global current_browser_url, browser_bus
 
+    view_start = monotonic()
+    logging.info('viewer display: view_webpage called with uri=%s', uri)
+
     record_render_command(
         r,
         media_type='webpage',
@@ -548,6 +724,7 @@ def view_webpage(uri: str) -> None:
     )
 
     if browser is None or not browser.is_alive():
+        logging.info('viewer display: browser is None or not alive; reloading')
         load_browser()
         # New browser process => stale proxy must be re-resolved.
         browser_bus = None
@@ -555,25 +732,57 @@ def view_webpage(uri: str) -> None:
     _ensure_browser_bus_ready()
 
     should_refresh = _should_force_webpage_refresh(uri)
+    logging.debug(
+        'viewer display: current_browser_url=%s, should_refresh=%s',
+        current_browser_url,
+        should_refresh,
+    )
 
     if current_browser_url != uri or should_refresh:
         try:
+            logging.info(
+                'viewer display: calling browser_bus.loadPage(%s)', uri
+            )
+            loadpage_start = monotonic()
             browser_bus.loadPage(uri)
-        except Exception:
+            elapsed = monotonic() - loadpage_start
+            logging.info(
+                'viewer display: browser_bus.loadPage succeeded (%.2fs)',
+                elapsed,
+            )
+        except Exception as exc:
+            elapsed = monotonic() - loadpage_start
             logging.exception(
-                'viewer display: loadPage failed, reconnecting browser bus'
+                'viewer display: loadPage failed after %.2fs, '
+                'reconnecting browser bus: %s',
+                elapsed,
+                exc,
             )
             browser_bus = None
             _ensure_browser_bus_ready()
             try:
+                logging.info(
+                    'viewer display: retry browser_bus.loadPage(%s)', uri
+                )
+                retry_start = monotonic()
                 browser_bus.loadPage(uri)
-            except Exception as exc:
+                elapsed = monotonic() - retry_start
+                logging.info(
+                    'viewer display: retry loadPage succeeded (%.2fs)', elapsed
+                )
+            except Exception as retry_exc:
+                elapsed = monotonic() - view_start
+                logging.exception(
+                    'viewer display: retry loadPage failed after %.2fs: %s',
+                    elapsed,
+                    retry_exc,
+                )
                 record_render_result(
                     r,
                     media_type='webpage',
                     uri=uri,
                     status='error',
-                    detail=str(exc),
+                    detail=str(retry_exc),
                 )
                 record_display_state(
                     r,
@@ -908,15 +1117,32 @@ def main() -> None:
         f'subscriber-ready={subscriber_ready}',
     )
 
-    _render_startup_splash_with_retry(False)
+    _render_splash_with_gate(False, 'offline-splash')
     _log_startup_timeline_event(startup_started_at, 'offline-splash-rendered')
+
+    # Hold the offline splash long enough to guarantee it is visible before the
+    # server health check runs. Without this, a fast server response causes
+    # wait_for_server() to return immediately, and the second splash call
+    # (below) races in and replaces the first before the webview has painted.
+    offline_splash_hold_remaining = OFFLINE_SPLASH_MIN_HOLD_SECONDS - (
+        monotonic() - startup_started_at
+    )
+    if offline_splash_hold_remaining > 0:
+        logging.info(
+            'viewer startup: holding offline splash for %.1fs',
+            offline_splash_hold_remaining,
+        )
+        sleep(offline_splash_hold_remaining)
+        _log_startup_timeline_event(
+            startup_started_at, 'offline-splash-hold-complete'
+        )
 
     server_is_ready = wait_for_server(SERVER_WAIT_TIMEOUT)
     _log_startup_timeline_event(
         startup_started_at,
         f'server-ready={server_is_ready}',
     )
-    _render_startup_splash_with_retry(server_is_ready)
+    _render_splash_with_gate(server_is_ready, 'server-or-offline-splash')
     _log_startup_timeline_event(
         startup_started_at,
         'splash-selection-complete',
@@ -934,7 +1160,7 @@ def main() -> None:
                 with attempt:
                     get_balena_device_info()
 
-        _render_startup_splash_with_retry()
+        _render_splash_with_gate(None, 'final-splash')
 
     has_startup_assets = bool(scheduler.assets)
     if has_startup_assets:
