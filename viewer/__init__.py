@@ -123,6 +123,8 @@ SUBSCRIBER_READY_POLL_INTERVAL_SECONDS = 0.2
 SETUP_RETRY_ATTEMPTS = 5
 SETUP_RETRY_DELAY_SECONDS = 2
 STARTUP_SPLASH_MIN_SECONDS_DEFAULT = 15.0
+STARTUP_SPLASH_RENDER_ATTEMPTS = 3
+STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS = 0.7
 
 
 def _display_debug_enabled() -> bool:
@@ -400,6 +402,24 @@ def _show_splash_with_fallback(server_is_ready: bool | None = None) -> bool:
     return False
 
 
+def _render_startup_splash_with_retry(
+    server_is_ready: bool | None = None,
+    attempts: int = STARTUP_SPLASH_RENDER_ATTEMPTS,
+    retry_delay_seconds: float = STARTUP_SPLASH_RENDER_RETRY_DELAY_SECONDS,
+) -> bool:
+    # On cold boot, WebView can emit the D-Bus handshake before it is fully
+    # paint-ready. Retry startup splash renders briefly to avoid a black screen.
+    rendered_server_splash = False
+    total_attempts = max(attempts, 1)
+
+    for attempt in range(1, total_attempts + 1):
+        rendered_server_splash = _show_splash_with_fallback(server_is_ready)
+        if attempt < total_attempts:
+            sleep(max(retry_delay_seconds, 0.0))
+
+    return rendered_server_splash
+
+
 def _connect_browser_bus() -> Any:
     bus = pydbus.SessionBus()
     return bus.get('anthias.webview', '/Anthias')
@@ -514,7 +534,7 @@ def load_browser() -> None:
 
 
 def _should_force_webpage_refresh(uri: str) -> bool:
-    return uri.endswith('/splash-page')
+    return uri.endswith('/splash-page') or uri.startswith('data:text/html,')
 
 
 def view_webpage(uri: str) -> None:
@@ -823,17 +843,6 @@ def asset_loop(scheduler: Any) -> None:
             pass
 
 
-def _render_initial_bellforge_splash() -> None:
-    """Replace any webview internal startup page as early as possible."""
-    try:
-        view_webpage(_build_offline_splash_url())
-        logging.info('viewer startup: initial bellforge splash rendered')
-    except Exception:
-        logging.exception(
-            'viewer startup: failed to render initial bellforge splash'
-        )
-
-
 def setup() -> None:
     global HOME, browser_bus
     HOME = getenv('HOME')
@@ -899,9 +908,7 @@ def main() -> None:
         f'subscriber-ready={subscriber_ready}',
     )
 
-    # Render splash through the helper so fallback exceptions are contained
-    # and consistently logged.
-    _show_splash_with_fallback(False)
+    _render_startup_splash_with_retry(False)
     _log_startup_timeline_event(startup_started_at, 'offline-splash-rendered')
 
     server_is_ready = wait_for_server(SERVER_WAIT_TIMEOUT)
@@ -909,7 +916,7 @@ def main() -> None:
         startup_started_at,
         f'server-ready={server_is_ready}',
     )
-    _show_splash_with_fallback(server_is_ready)
+    _render_startup_splash_with_retry(server_is_ready)
     _log_startup_timeline_event(
         startup_started_at,
         'splash-selection-complete',
@@ -927,7 +934,7 @@ def main() -> None:
                 with attempt:
                     get_balena_device_info()
 
-        _show_splash_with_fallback()
+        _render_startup_splash_with_retry()
 
     has_startup_assets = bool(scheduler.assets)
     if has_startup_assets:

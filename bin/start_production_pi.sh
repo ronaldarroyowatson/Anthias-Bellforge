@@ -5,7 +5,16 @@ cd ~/Anthias-Bellforge
 
 export DOCKER_TAG="latest"
 export DEVICE_TYPE="pi5"
-export MY_IP="192.168.2.180"
+# Resolve the current LAN IP on every boot so splash/setup URLs stay valid.
+MY_IP_DETECTED="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
+if [ -z "$MY_IP_DETECTED" ]; then
+	MY_IP_DETECTED="$(hostname -I | awk '{print $1}')"
+fi
+if [ -z "$MY_IP_DETECTED" ]; then
+	echo "ERROR: Unable to determine host IP for MY_IP" >&2
+	exit 1
+fi
+export MY_IP="$MY_IP_DETECTED"
 export MAC_ADDRESS=""
 export USER="pi"
 TOTAL_KB=3887864
@@ -16,6 +25,7 @@ export SHM_SIZE_KB=$(( TOTAL_KB * 3 / 10 ))
 COMPOSE_FILE="$HOME/Anthias-Bellforge/docker-compose.prod.yml"
 
 echo "==> Substituting template..."
+echo "==> Using MY_IP=$MY_IP"
 envsubst < docker-compose.yml.tmpl > "$COMPOSE_FILE"
 
 echo "==> Removing /dev/vchiq entries (Pi5 does not need them)..."
