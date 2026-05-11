@@ -367,7 +367,7 @@ def _build_offline_splash_url() -> str:
 </head>
 <body>
     <main class="panel">
-        <h1>Bellforge is loading</h1>
+        <h1>Bellforge is starting</h1>
         <p>The device display is online and waiting for the server splash page.</p>
         <p>Open this address from another device on your network:</p>
         <div class="url">{connect_url}</div>
@@ -823,6 +823,17 @@ def asset_loop(scheduler: Any) -> None:
             pass
 
 
+def _render_initial_bellforge_splash() -> None:
+    """Replace any webview internal startup page as early as possible."""
+    try:
+        view_webpage(_build_offline_splash_url())
+        logging.info('viewer startup: initial bellforge splash rendered')
+    except Exception:
+        logging.exception(
+            'viewer startup: failed to render initial bellforge splash'
+        )
+
+
 def setup() -> None:
     global HOME, browser_bus
     HOME = getenv('HOME')
@@ -841,6 +852,7 @@ def setup() -> None:
     load_browser()
 
     browser_bus = _connect_browser_bus()
+    # Removed premature splash render as it is handled in main()
 
 
 def wait_for_node_ip(seconds: int) -> None:
