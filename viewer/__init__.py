@@ -134,7 +134,7 @@ SPLASH_POST_RENDER_SETTLE_SECONDS = 2.0
 OFFLINE_SPLASH_MIN_HOLD_SECONDS = 3.0
 # Maximum total time to spend trying to confirm the splash is visible before
 # giving up and proceeding (prevents startup deadlock).
-SPLASH_WATCHDOG_TIMEOUT_SECONDS = 30.0
+SPLASH_WATCHDOG_TIMEOUT_SECONDS = 90.0
 
 
 def _display_debug_enabled() -> bool:
@@ -392,22 +392,35 @@ def _build_offline_splash_url() -> str:
 def _show_splash_with_fallback(server_is_ready: bool | None = None) -> bool:
     splash_start = monotonic()
 
+    def log_render_probe_state(stage: str) -> None:
+        logging.info(
+            'viewer startup: render probe %s available=%s uptime=%.2fs',
+            stage,
+            render_probe.is_available(),
+            monotonic() - splash_start,
+        )
+
     if server_is_ready is None:
         server_is_ready = wait_for_server(retries=1, wt=0)
 
     if server_is_ready:
         logging.info('viewer startup: using server splash page')
         try:
+            log_render_probe_state('before-server-splash')
             logging.info(
                 'viewer startup: calling view_webpage(%s) for server splash',
                 SPLASH_PAGE_URL,
             )
+            server_call_started = monotonic()
             view_webpage(SPLASH_PAGE_URL)
             elapsed = monotonic() - splash_start
             logging.info(
-                'viewer startup: server splash rendered successfully (%.2fs)',
+                'viewer startup: server splash rendered successfully '
+                '(%.2fs total, %.2fs call)',
                 elapsed,
+                monotonic() - server_call_started,
             )
+            log_render_probe_state('after-server-splash')
             # Settle: give the webview time to actually paint before we return.
             sleep(SPLASH_POST_RENDER_SETTLE_SECONDS)
             return True
@@ -422,13 +435,18 @@ def _show_splash_with_fallback(server_is_ready: bool | None = None) -> bool:
     logging.warning('viewer startup: using offline splash fallback')
     offline_splash_url = _build_offline_splash_url()
     try:
+        log_render_probe_state('before-offline-splash')
         logging.info('viewer startup: calling view_webpage for offline splash')
+        offline_call_started = monotonic()
         view_webpage(offline_splash_url)
         elapsed = monotonic() - splash_start
         logging.info(
-            'viewer startup: offline splash rendered successfully (%.2fs)',
+            'viewer startup: offline splash rendered successfully '
+            '(%.2fs total, %.2fs call)',
             elapsed,
+            monotonic() - offline_call_started,
         )
+        log_render_probe_state('after-offline-splash')
         # Settle: give the webview time to actually paint before we return.
         sleep(SPLASH_POST_RENDER_SETTLE_SECONDS)
         return True
