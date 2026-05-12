@@ -14,6 +14,20 @@
             height: 100%;
             overflow-y: hidden;
         }
+
+        .splash-logo {
+            width: min(75%, 28rem) !important;
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 767px) {
+            .splash-logo {
+                width: auto !important;
+                max-width: 85vw;
+                max-height: 100px;
+            }
+        }
     </style>
 </head>
 <body class="splash container d-table">
@@ -24,7 +38,7 @@
                 class="logo-container page-header d-flex flex-nowrap
                     justify-content-center align-items-center"
             >
-                <img src="{{ splash_logo_url }}" alt="splash-logo" class="img-fluid"/>
+                <img src="{{ splash_logo_url }}" alt="Bellforge logo" class="img-fluid splash-logo"/>
             </div>
         </div>
     </div>
@@ -49,7 +63,7 @@
                     <div class="form-actions">
                         {% for ip_address in ip_addresses %}
                             <a href="{{ ip_address }}">{{ ip_address }}</a>
-                            {% if not loop.last %}
+                            {% if not forloop.last %}
                                 <br/>
                             {% endif %}
                         {% endfor %}
@@ -58,6 +72,8 @@
                     <p>Unable to retrieve IP.</p>
                 {% endif %}
                     <div class="text-center mt-3">
+                        <div style="font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem;">Bellforge</div>
+                        <div style="font-size: 0.95rem; color: #888;">by Ronald Arroyo-Watson<br/>Based on Anthias by Screenly, Inc.</div>
                         {% if internet_reachable %}
                             <small class="text-success">Internet: Connected</small>
                         {% else %}
