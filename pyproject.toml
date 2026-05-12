@@ -34,7 +34,7 @@ server = [
     "cec==0.2.8",
     "celery==5.6.3",
     "certifi==2025.10.5",
-    "channels==4.3.1",
+    "channels==4.3.2",
     "channels-redis==4.3.0",
     "Django==5.2.13",
     "djangorestframework==3.16.1",
@@ -107,7 +107,7 @@ test = [
 mypy = [
     { include-group = "dev-host" },
     { include-group = "docker-image-builder" },
-    "channels==4.3.1",
+    "channels==4.3.2",
     "channels-redis==4.3.0",
     "Django==5.2.13",
     "django-dbbackup==5.3.0",
