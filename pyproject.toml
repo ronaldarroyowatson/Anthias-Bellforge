@@ -76,7 +76,7 @@ viewer = [
 ]
 dev = [
     "mock==5.2.0",
-    "selenium==4.36.0",
+    "selenium==4.43.0",
     "splinter==0.21.0",
     "time-machine==2.15.0",
     "unittest-parametrize==1.8.0",
