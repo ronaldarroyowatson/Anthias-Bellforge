@@ -5,7 +5,27 @@ set -euo pipefail
 BUILDER_DOCKERFILE='docker/Dockerfile.dev'
 BUILDER_IMAGE_NAME='anthias-dockerfile-image-builder'
 BUILDER_CONTAINER_NAME="${BUILDER_IMAGE_NAME}-instance"
-BUILD_TARGET="${BUILD_TARGET:-x86}"
+detect_build_target() {
+    local machine
+    machine="$(uname -m 2>/dev/null || true)"
+
+    # Keep the historical x86 default for developer machines, but
+    # auto-select Raspberry Pi targets so viewer artifacts match hardware.
+    if [[ "${machine}" == "aarch64" || "${machine}" == "arm64" ]]; then
+        local model
+        model="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || true)"
+        if [[ "${model}" == *"Raspberry Pi 5"* ]]; then
+            echo "pi5"
+            return
+        fi
+        echo "pi4-64"
+        return
+    fi
+
+    echo "x86"
+}
+
+BUILD_TARGET="${BUILD_TARGET:-$(detect_build_target)}"
 ENVIRONMENT="${ENVIRONMENT:-development}"
 
 docker build \
