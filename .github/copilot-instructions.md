@@ -83,3 +83,37 @@ For architecture, codex, and fix-log documentation, use append-only updates wher
 - add new dated entries
 - do not delete historical findings
 - mark superseded entries with a status update instead of removal
+
+## Bugfix Workflow Contract
+
+When the user requests to initiate the bugfix workflow, execute this full sequence unless explicitly scoped down:
+
+1. Run full automated tests:
+- frontend tests
+- backend/unit tests
+- integration tests
+- Linux display pipeline tests
+
+2. Run smoke tests and live Pi verification:
+- verify service/container health
+- verify `/`, `/settings`, `/system-info`, and `/splash-page` endpoints return HTTP 200
+- verify render telemetry indicates successful display command/result state
+
+3. Run installer/uninstaller/repair simulation on Pi:
+- execute full update/upgrade path
+- execute backup + restore validation
+- simulate corruption (for example DB/data corruption), then verify repair/restore path recovers runtime
+
+4. Validate user-visible runtime behavior:
+- verify display path is working after restart/reboot checks
+- verify settings page sections/elements are present, visible, and scrollable
+
+5. Release and synchronization steps:
+- bump BellForge bugfix version only (X.Y.Z, increment Z)
+- update version metadata needed for reboot/update detection
+- update related docs/handoff/fix-log entries
+- commit and push all relevant bugfix changes to remote
+
+6. Report completion with evidence:
+- include pass/fail status per phase
+- include blockers and residual risks if any phase cannot pass in current environment

@@ -3,10 +3,7 @@
 services:
   anthias-server:
     image: ghcr.io/screenly/anthias-server:${DOCKER_TAG}-${DEVICE_TYPE}
-<<<<<<< HEAD
     pull_policy: never
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     build:
       context: .
       dockerfile: docker/Dockerfile.server
@@ -20,10 +17,7 @@ services:
       - LISTEN=0.0.0.0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-<<<<<<< HEAD
       - TELEMETRY_ENABLED=false
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     depends_on:
       - redis
     devices:
@@ -41,10 +35,7 @@ services:
 
   anthias-viewer:
     image: ghcr.io/screenly/anthias-viewer:${DOCKER_TAG}-${DEVICE_TYPE}
-<<<<<<< HEAD
     pull_policy: never
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     build:
       context: .
       dockerfile: docker/Dockerfile.viewer
@@ -76,10 +67,7 @@ services:
     # and a separate celery image was duplicating ~825 MB extracted of
     # identical content per device. See refactor: drop celery image.
     image: ghcr.io/screenly/anthias-server:${DOCKER_TAG}-${DEVICE_TYPE}
-<<<<<<< HEAD
     pull_policy: never
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     command: >
       celery -A celery_tasks.celery worker -B -n worker@anthias
       --loglevel=info --schedule /tmp/celerybeat-schedule
@@ -90,10 +78,7 @@ services:
       - HOME=/data
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-<<<<<<< HEAD
       - TELEMETRY_ENABLED=false
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     devices:
       - "/dev/vchiq:/dev/vchiq"
     restart: always
@@ -108,10 +93,7 @@ services:
 
   redis:
     image: ghcr.io/screenly/anthias-redis:${DOCKER_TAG}-${DEVICE_TYPE}
-<<<<<<< HEAD
     pull_policy: never
-=======
->>>>>>> 1471d404 (fix(boot): point Pi startup path at Bellforge checkout)
     build:
       context: .
       dockerfile: docker/Dockerfile.redis

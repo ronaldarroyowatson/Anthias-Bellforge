@@ -103,9 +103,9 @@ export const SystemControls = () => {
       </div>
       <div className="row content px-3">
         <div className="col-12 my-3">
-          <div className="text-end">
+          <div className="action-button-group">
             <button
-              className="btn btn-danger btn-long me-2"
+              className="btn btn-danger btn-long"
               type="button"
               onClick={handleReboot}
             >

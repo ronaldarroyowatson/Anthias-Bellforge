@@ -458,10 +458,33 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
 ## 2025-05-11
 
 ### ISSUE-027: Offline splash watchdog timeout insufficient for Qt6 WebEngine D-Bus blocking
+
+## 2026-05-13
+
+### ISSUE-028: Reboot-time black screen recurrence with healthy render telemetry
+- Symptoms:
+  - after reboot, display briefly appeared healthy and then turned black again.
+  - network checks and startup endpoint remained reachable while panel output regressed.
+- Impact:
+  - operators could not trust reboot persistence even when service health checks looked good.
+- Debug evidence:
+  - render telemetry stayed healthy (`viewer.render.last_result` advanced continuously with success states).
+  - viewer container stayed running and produced active EGL/KMS output logs.
+  - Pi boot configuration was using `dtoverlay=vc4-fkms-v3d` and lacked explicit console blank disable.
+- Fix:
+  - switch Pi boot overlay to full KMS (`dtoverlay=vc4-kms-v3d`).
+  - add `consoleblank=0` to kernel cmdline.
+  - persistently disable/mask host display manager service (`lightdm`) to prevent DRM ownership races after updates/reboots.
+  - revalidate with reboot and runtime soak checks (viewer up, splash HTTP 200, render telemetry progressing).
+- Files:
+  - /boot/firmware/config.txt (Pi runtime)
+  - /boot/firmware/cmdline.txt (Pi runtime)
+  - bin/anthias-dev.service
+- Status: mitigated on Pi runtime and currently stable; continue reboot-level physical display validation for confidence.
 - Symptoms: offline splash watchdog timed out after 30 seconds while actual D-Bus rendering call to iew_webpage() took ~79 seconds on Raspberry Pi 5 with Qt6 WebEngine.
 - Impact: splash rendering would timeout and trigger retry logic, logging "offline-splash watchdog timeout after 30.xxs on attempt 1" even though the splash eventually rendered successfully. Display appeared to hang momentarily as the system recovered, degrading user experience during boot.
 - Root cause: iew_webpage() D-Bus call is blocking and waits for the Qt webview process to receive the message, render the HTML, and acknowledge completion. On Pi 5 with Qt6 WebEngine, this process takes ~79 seconds due to webview initialization overhead.
-- Debug evidence: 
+- Debug evidence:
   - Container logs showed consistent timing: "offline splash rendered successfully (79.14s)" but watchdog warning at "offline-splash watchdog timeout after 30.xxs on attempt 1".
   - The splash eventually completed and returned True, proving the timeout was a warning-only condition, not a hard blocker.
   - Multiple container restarts during troubleshooting confirmed the 79-second duration was consistent across attempts.
@@ -472,3 +495,40 @@ Purpose: running, append-only log of display-pipeline defects, diagnostics, and 
 - Files:
   - viewer/__init__.py (SPLASH_WATCHDOG_TIMEOUT_SECONDS constant)
 - Status: fixed and validated on Pi5 with Qt6 WebEngine; offline splash now completes within timeout window without warnings.
+
+## 2026-05-13 (Bugfix Workflow Validation)
+
+### ISSUE-029: Settings backup/system-controls region could be obscured by footer overlap
+- Symptoms:
+  - Settings page backup/system-controls area could appear truncated at the bottom.
+  - Users reported inability to reliably scroll to all controls.
+- Impact:
+  - Backup and recovery actions were harder to access during recovery workflows.
+- Debug evidence:
+  - live browser geometry checks showed footer overlap against settings bottom content before fix.
+  - post-fix checks verified no overlap and full section visibility.
+- Fix:
+  - add settings-route footer flow override and spacing guard in `static/sass/_styles.scss`.
+  - keep global footer behavior unchanged for non-settings routes.
+- Files:
+  - static/sass/_styles.scss
+  - static/src/components/settings/index.tsx
+- Status:
+  - fixed in code and validated in live Pi browser checks.
+
+### ISSUE-030: Fresh-install simulation restore phase initially failed due missing restore script in remote clone
+- Symptoms:
+  - fresh-install simulation completed upgrade/clone/startup phases but restore phase aborted with missing restore script path.
+- Impact:
+  - automated corruption-recovery validation could not finish in one pass.
+- Debug evidence:
+  - simulation run failed at phase 4 with missing `/opt/bellforge/bin/restore_bellforge_state.sh`.
+- Fix:
+  - sync backup/restore scripts to Pi runtime path and rerun backup+corruption+restore validation.
+  - confirm service recovery, DB restore, and endpoint health checks.
+- Files:
+  - bin/backup_bellforge_state.sh
+  - bin/restore_bellforge_state.sh
+  - bin/run_pi_fresh_install_simulation.sh
+- Status:
+  - validated on Pi runtime: corruption simulation and restore recovery succeeded.

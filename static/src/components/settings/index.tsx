@@ -54,6 +54,14 @@ export const Settings = () => {
     document.title = title
   }, [settings.playerName])
 
+  useEffect(() => {
+    document.body.classList.add('settings-page')
+
+    return () => {
+      document.body.classList.remove('settings-page')
+    }
+  }, [])
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {

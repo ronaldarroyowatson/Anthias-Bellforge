@@ -1,6 +1,6 @@
 {
   "name": "bellforge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build:js": "bun build ./static/src/index.tsx --outfile=./static/dist/js/anthias.js --target=browser --production --define process.env.ENVIRONMENT='\"production\"'",
     "build:css": "bunx sass static/sass/anthias.scss static/dist/css/anthias.css --style=compressed --quiet-deps --silence-deprecation=import,global-builtin,color-functions,if-function",
@@ -44,7 +44,7 @@
     "@typescript-eslint/parser": "^8.59.1",
     "classnames": "^2.5.1",
     "eslint": "^10.1.0",
-    "msw": "^2.14.2",
+    "msw": "^2.14.6",
     "prettier": "3.8.3",
     "sass": "^1.98.0",
     "typescript": "^6.0.3"
