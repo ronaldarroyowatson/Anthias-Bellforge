@@ -10,6 +10,14 @@ afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 describe('SystemInfo', () => {
+  it('should not show the bell overlay and should show system info table', async () => {
+    render(<SystemInfo />)
+    // Bell/logo should not be present
+    expect(screen.queryByAltText(/bellforge logo/i)).not.toBeInTheDocument()
+    // System info table should be visible
+    expect(screen.getByRole('table')).toBeVisible()
+    expect(screen.getByText('System Info')).toBeVisible()
+  })
   it('renders the system info', async () => {
     render(<SystemInfo />)
 

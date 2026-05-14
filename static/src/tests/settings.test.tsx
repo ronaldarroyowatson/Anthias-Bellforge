@@ -107,6 +107,38 @@ const testFormSubmission = async (
 }
 
 describe('Settings Component', () => {
+  it('should not show the bell overlay and should show controls', async () => {
+    render(
+      <Provider store={createMockStore()}>
+        <Settings />
+      </Provider>,
+    )
+
+    expect(screen.queryByAltText(/bellforge logo/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Player name/i)).toBeVisible()
+    expect(screen.getByText(/Backup/i)).toBeVisible()
+    expect(screen.getByText(/System Controls/i)).toBeVisible()
+  })
+
+  it('hides splash logos injected after settings mount', async () => {
+    render(
+      <Provider store={createMockStore()}>
+        <Settings />
+      </Provider>,
+    )
+
+    const injectedLogo = document.createElement('img')
+    injectedLogo.src = '/static/img/logo-full-splash.svg'
+    injectedLogo.alt = 'Bellforge logo'
+    document.body.appendChild(injectedLogo)
+
+    await waitFor(() => {
+      expect(injectedLogo.style.display).toBe('none')
+    })
+
+    injectedLogo.remove()
+  })
+
   it('renders settings form with all components', async () => {
     renderWithProvider(<Settings />)
 

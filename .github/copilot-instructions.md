@@ -1,8 +1,8 @@
 # Copilot Instructions - Bellforge Project
 
-**Project**: Bellforge (derivative of Anthias by Screenly, Inc.)  
-**Maintainer**: Ronald Arroyo-Watson  
-**License**: GPLv2 (consistent with upstream Anthias)  
+**Project**: Bellforge (derivative of Anthias by Screenly, Inc.)
+**Maintainer**: Ronald Arroyo-Watson
+**License**: GPLv2 (consistent with upstream Anthias)
 **Purpose**: Custom distribution with enhancements while maintaining upstream compatibility
 
 ## Bellforge-Specific Guidelines

@@ -38,9 +38,9 @@ docker run \
     --rm \
     --name="$BUILDER_CONTAINER_NAME" \
     -v "$(pwd):/app" \
-    -v "${BUILDER_IMAGE_NAME}-venv:/app/.venv" \
+    -e PYTHONPATH=/app \
     "$BUILDER_IMAGE_NAME" \
-    uv run python -m tools.image_builder \
+    python3 -m tools.image_builder \
         --environment="$ENVIRONMENT" \
         --dockerfiles-only \
         --disable-cache-mounts \

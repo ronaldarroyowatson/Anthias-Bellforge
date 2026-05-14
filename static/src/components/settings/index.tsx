@@ -57,7 +57,31 @@ export const Settings = () => {
   useEffect(() => {
     document.body.classList.add('settings-page')
 
+    const hideSplashLogos = () => {
+      const splashLogos = Array.from(
+        document.querySelectorAll<HTMLImageElement>(
+          "img[src*='logo-full-splash'], img[src*='bellforge-logo']",
+        ),
+      ).filter((image) => !image.closest('.navbar-brand'))
+
+      for (const image of splashLogos) {
+        image.style.display = 'none'
+      }
+    }
+
+    hideSplashLogos()
+
+    const observer = new MutationObserver(() => {
+      hideSplashLogos()
+    })
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
+
     return () => {
+      observer.disconnect()
       document.body.classList.remove('settings-page')
     }
   }, [])

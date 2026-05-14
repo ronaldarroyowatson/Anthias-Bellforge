@@ -248,7 +248,9 @@ label {
     margin-bottom: 3vh;
 
     img {
-      width: 75%;
+      width: 75% !important;
+      max-width: none !important;
+      max-height: none !important;
     }
   }
 

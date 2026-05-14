@@ -35,6 +35,15 @@ const renderWithRedux = (
 }
 
 describe('ScheduleOverview', () => {
+  it('should not show the bell overlay and should show schedule content', async () => {
+    await act(async () => {
+      renderWithRedux(<ScheduleOverview />)
+    })
+    // Bell/logo should not be present
+    expect(screen.queryByAltText(/bellforge logo/i)).not.toBeInTheDocument()
+    // Schedule Overview heading should be visible
+    expect(screen.getByText('Schedule Overview')).toBeVisible()
+  })
   it('renders the home page', async () => {
     await act(async () => {
       renderWithRedux(<ScheduleOverview />)
